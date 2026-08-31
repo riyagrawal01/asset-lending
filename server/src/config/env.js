@@ -1,0 +1,17 @@
+'use strict';
+
+require('dotenv').config();
+
+const env = process.env.NODE_ENV || 'development';
+const port = parseInt(process.env.PORT, 10) || 5000;
+const mongoUri = process.env.MONGODB_URI;
+
+if (!mongoUri) {
+  throw new Error('MONGODB_URI environment variable is required');
+}
+
+module.exports = {
+  env,
+  port,
+  mongoUri,
+};

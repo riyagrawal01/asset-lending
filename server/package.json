@@ -1,0 +1,25 @@
+{
+  "name": "asset-lending-server",
+  "version": "1.0.0",
+  "description": "Asset Lending API server",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --forceExit"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
+    "mongoose": "^8.4.0",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.3",
+    "supertest": "^7.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+dist/
+build/
+.next/
+target/
+__pycache__/
+venv/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+
+# Vite
+client/.vite/
+
+# Test coverage
+coverage/
+PROJECT_CONTRACT.md

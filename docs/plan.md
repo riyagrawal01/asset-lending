@@ -1,0 +1,50 @@
+# Plan
+
+## Work sessions
+
+I divided the project into seven sessions so that each session would leave the project in a usable state before moving to the next part.
+
+The order is:
+
+1. Foundation
+2. Database schema
+3. Authentication and roles
+4. Catalogue and custodians
+5. Loans and loan lifecycle
+6. Search, bulk operations and dashboard
+7. Alerts, testing and final setup
+
+I started with the foundation because the rest of the application depends on having the client, server and database connection working. The schema comes next because the later features depend on it. Authentication is added before the application features so that access rules can be built into the APIs from the beginning.
+
+The catalogue and lending features are kept separate because lending is the main business workflow and depends on the catalogue. Search, bulk operations and the dashboard are built after the lending workflow so they can use the actual loan data. Alerts and final testing are left until the end.
+
+I will record changes to this plan if the implementation requires them.
+
+---
+
+## M1 — Foundation
+
+**Scope**
+
+Set up the basic client and server application, configuration, MongoDB connection, health endpoint and development tooling.
+
+**What I planned to do**
+
+* Set up the client and server
+* Configure the development environment
+* Set up the MongoDB connection
+* Add the health endpoint
+* Add basic error handling
+* Set up the Vite development proxy
+* Add the basic API client
+* Add development scripts
+* Verify that the application starts and builds correctly
+
+### Result
+
+M1 was completed. The client and server run independently, the development setup works, and the health endpoint was verified.
+
+
+---
+
+More modules will be added here as they are completed.
