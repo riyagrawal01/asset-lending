@@ -1,36 +1,43 @@
 # Decisions
 
-Log the decisions that actually shaped this codebase — the ones where a real alternative existed and
-you picked one. At least five entries. For each: what you chose, what you rejected, and why. At least
-one entry must be a decision you later reversed — say what changed your mind. It can be any entry
-below, not necessarily the last one; add a **Later reversed:** line to whichever one it is.
+Important design decisions made during M02.
 
-## Decision 1
+---
 
-- **Chose:**
-- **Rejected:**
-- **Why:**
+## Decision 1 — Derive overdue status
 
-## Decision 2
+**Chose:** Derive overdue from `status === ISSUED` and `dueDate < now`.
 
-- **Chose:**
-- **Rejected:**
-- **Why:**
+**Rejected:** Storing `OVERDUE` as a loan status.
 
-## Decision 3
+**Why:** Avoids a background job and keeps overdue status from becoming stale.
 
-- **Chose:**
-- **Rejected:**
-- **Why:**
+---
 
-## Decision 4
+## Decision 2 — Separate loan history
 
-- **Chose:**
-- **Rejected:**
-- **Why:**
+**Chose:** Use a separate `LoanEvent` collection.
 
-## Decision 5
+**Rejected:** Embedding events inside `Loan`.
 
-- **Chose:**
-- **Rejected:**
-- **Why:**
+**Why:** Keeps loan documents smaller and gives the history its own structure and index.
+
+---
+
+## Decision 3 — Custodian join collection
+
+**Chose:** Use `ItemCustodian` for the user–item relationship.
+
+**Rejected:** Storing librarian IDs directly on `Item`.
+
+**Why:** The application needs both item → custodians and librarian → items lookups.
+
+---
+
+## Decision 4 — Availability comes from loans
+
+**Chose:** Determine whether an item is available from its open loans.
+
+**Rejected:** Storing an `available` flag on `Item`.
+
+**Why:** An availability flag would create a second source of truth. The atomic issue operation will be decided when the loan service is implemented.

@@ -37,6 +37,7 @@ server/src/
 ├── config/
 ├── controllers/
 ├── middleware/
+├── models/
 ├── routes/
 ├── utils/
 ├── app.js
@@ -44,6 +45,26 @@ server/src/
 ```
 
 The project will add domain-specific parts such as models and services when those features are implemented. They are not part of the M1 implementation.
+
+## Data model
+
+The five core models:
+       User
+       Item
+       Loan
+       LoanEvent
+       ItemCustodian
+
+The main relationships are:
+
+User ───────< Loan >────── Item
+                |
+                |
+                v
+            LoanEvent
+
+User >──────< Item
+     custodians
 
 ## Health request
 
@@ -61,17 +82,5 @@ Health controller
        v
 JSON response
 ```
-
-## M1 boundary
-
-M1 only establishes the application foundation. It does not include:
-
-* authentication
-* business data models
-* catalogue functionality
-* loan functionality
-* dashboard or alerts
-* bulk operations
-* deployment configuration
 
 The architecture will be updated when later modules introduce new components or change existing boundaries.

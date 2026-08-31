@@ -47,4 +47,20 @@ M1 was completed. The client and server run independently, the development setup
 
 ---
 
-More modules will be added here as they are completed.
+## M02 — Data Model
+
+**Scope:** Define the database models, relationships, indexes, and validation needed for the core lending data.
+
+**What I worked on:**
+
+1. Added the five Mongoose models: User, Item, Loan, LoanEvent, and ItemCustodian.
+2. Added the references between users, items, loans, events, and custodians.
+3. Added the required unique constraints and indexes based on the expected queries.
+4. Kept `OVERDUE` as a derived condition instead of a stored loan status.
+5. Kept loan events separate so the loan timeline can remain append-only.
+6. Added the model constants and shared model exports.
+
+
+---
+
+*Later modules will be recorded here as they are completed.*
