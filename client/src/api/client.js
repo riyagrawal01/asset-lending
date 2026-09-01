@@ -1,13 +1,17 @@
 //Centralized API client.
 
+import { getToken } from '../utils/token';
+
 const BASE_URL = '/api';
 
 
 async function request(path, options = {}) {
   const { body, ...rest } = options;
 
+  const token = getToken();
   const headers = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...options.headers,
   };
 

@@ -80,3 +80,23 @@ A few changes were made during the review:
 - Removed comments from the models where the code was already self-explanatory.
 
 The schema were checked again after these changes.
+
+---
+
+## M03 — Authentication
+
+### Prompt
+
+Implement authentication for the application using JWT and bcrypt.
+
+Add member registration, login, authentication middleware, and role checking for librarians and members. Registration should always create a member account. Use a 3-day JWT and store the token in `localStorage` on the client. Registration should not automatically log the user in.
+
+Keep the implementation simple and consistent with the existing project structure. Add tests for the main authentication and authorization cases.
+
+### What I got
+
+The implementation added the authentication service, routes, middleware, client token handling, and authentication tests.
+
+### What I corrected
+
+I reviewed the implementation and kept the authentication and role checking together in the existing middleware instead of introducing another middleware file. I also kept the token handling simple for now rather than adding refresh tokens or other authentication features that were not needed.

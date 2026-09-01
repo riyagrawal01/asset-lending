@@ -239,11 +239,16 @@ describe('Index declarations', () => {
     expect(found).toBeDefined();
   });
 
-  it('ItemCustodian has item index', () => {
-    expect(indexKeys(ItemCustodian)).toContain('item');
+  it('ItemCustodian compound index covers item lookups via leading key', () => {
+    // The compound { item: 1, librarian: 1 } index supports item-only queries
+    // because item is the leading field. A separate { item: 1 } index is redundant.
+    const idx = ItemCustodian.schema.indexes();
+    const leading = idx.find(([fields]) => Object.keys(fields)[0] === 'item');
+    expect(leading).toBeDefined();
   });
 
   it('ItemCustodian has librarian index', () => {
     expect(indexKeys(ItemCustodian)).toContain('librarian');
   });
 });
+

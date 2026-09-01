@@ -63,4 +63,22 @@ M1 was completed. The client and server run independently, the development setup
 
 ---
 
+### M03 — Authentication
+
+**Scope:** Registration, login, JWT authentication, role-based access, and client-side token handling.
+
+**What I worked on:**
+
+1. Added the JWT secret to the existing environment configuration.
+2. Added the authentication service for registration and login, including password hashing and JWT creation.
+3. Added authentication middleware to verify tokens and identify the logged-in user.
+4. Added role checking so librarian-only operations can be enforced on the server.
+5. Added the authentication controller and routes for registration, login, and the current-user endpoint.
+6. Connected the new authentication routes to the existing Express application.
+7. Added simple client-side token handling using `localStorage` and attached the token to authenticated API requests.
+8. Added the client authentication API for registration, login, fetching the current user, and logout.
+
+
+---
+
 *Later modules will be recorded here as they are completed.*
