@@ -1,11 +1,11 @@
 'use strict';
 
 /**
- * Auth controller — thin. Delegates all logic to authService.
+ * Auth controller - thin. Delegates all logic to authService.
  *
- * POST /api/auth/register  — create a MEMBER account
- * POST /api/auth/login     — authenticate and return a JWT
- * GET  /api/auth/me        — return the current user (requires authenticate middleware)
+ * POST /api/auth/register   create a MEMBER account
+ * POST /api/auth/login      authenticate and return a JWT
+ * GET  /api/auth/me         return the current user (requires authenticate middleware)
  */
 
 const authService = require('../services/authService');

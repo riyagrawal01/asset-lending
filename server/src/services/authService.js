@@ -1,16 +1,5 @@
 'use strict';
 
-/**
- * authService — all authentication business logic.
- *
- * Responsibilities:
- *  - hash passwords with bcrypt
- *  - compare a plaintext password against a stored hash
- *  - sign JWT tokens
- *  - verify JWT tokens
- *  - register a new user (always as MEMBER)
- *  - authenticate a user by email + password and return a token
- */
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -89,10 +78,9 @@ async function register({ name, email, password }) {
     name: name.trim(),
     email: email.toLowerCase().trim(),
     passwordHash,
-    role: ROLES.MEMBER, // Always MEMBER — never user-supplied.
+    role: ROLES.MEMBER,
   });
 
-  // Return a safe user object (no hash).
   return {
     id: user._id,
     name: user.name,
@@ -102,14 +90,7 @@ async function register({ name, email, password }) {
   };
 }
 
-/**
- * Authenticate a user by email + password.
- *
- * Returns { token, user } on success.
- * Throws with status 401 on bad credentials.
- * Uses the same error message regardless of whether email or password is wrong
- * to avoid leaking which part was incorrect (credential enumeration defence).
- */
+
 async function login({ email, password }) {
   if (!email || !password) {
     const err = new Error('Email and password are required.');
@@ -118,7 +99,6 @@ async function login({ email, password }) {
     throw err;
   }
 
-  // Explicitly select passwordHash — it has select:false on the schema.
   const user = await User.findOne({ email: email.toLowerCase().trim() }).select('+passwordHash');
 
   const INVALID_MSG = 'Invalid email or password.';
@@ -153,10 +133,7 @@ async function login({ email, password }) {
   };
 }
 
-/**
- * Load a user from the database by id extracted from a verified JWT payload.
- * Returns null if the user no longer exists.
- */
+
 async function getUserById(id) {
   return User.findById(id);
 }

@@ -78,6 +78,33 @@ M1 was completed. The client and server run independently, the development setup
 7. Added simple client-side token handling using `localStorage` and attached the token to authenticated API requests.
 8. Added the client authentication API for registration, login, fetching the current user, and logout.
 
+### M04 — Catalogue
+
+**Scope:** Catalogue management with role-based access. This includes the server service, controller and routes, along with the client API and catalogue UI. Added 26 tests for the catalogue functionality.
+
+**What was added:**
+
+1. `services/itemService.js` — added the main catalogue operations: list, get, create, update, archive and restore. Duplicate item codes are checked before creation so the API can return a clear error.
+
+2. `controllers/itemController.js` — kept the controllers thin and delegated the catalogue operations to the service.
+
+3. `routes/items.js` — added the catalogue endpoints. `/archived` is defined before `/:id` so it is handled as a specific route.
+
+4. `app.js` — mounted the catalogue routes under `/api/items`.
+
+5. `client/src/api/itemsApi.js` — added the client-side functions for the catalogue endpoints.
+
+6. `client/src/features/LoginRegister.jsx` — added the login and registration UI. Registration creates the account without automatically logging the user in.
+
+7. `client/src/features/ItemFormModal.jsx` — created a shared form for both adding and editing items.
+
+8. `client/src/features/CataloguePage.jsx` — added the catalogue view. Members have read-only access while librarians can add, edit, archive and restore items.
+
+9. `client/src/app/catalogue.css` — added the styles for the catalogue, forms, modal and related UI.
+
+10. `client/src/app/App.jsx` — connected the authentication state with the main application view, showing the login screen when there is no authenticated user and the catalogue when there is.
+
+**Result:** Catalogue management is now available through the API and client, with librarian actions protected on the server and archived items kept separate from the default catalogue view.
 
 ---
 

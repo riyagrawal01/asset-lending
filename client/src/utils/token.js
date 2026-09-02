@@ -1,10 +1,9 @@
 /**
- * Token storage — thin wrapper around localStorage.
+ * Token storage - thin wrapper around localStorage.
  *
  * Centralising token access here means:
  *  - the storage key is defined in one place
- *  - switching storage strategies (e.g. memory, sessionStorage) only requires
- *    changes here, not across the whole codebase
+ *  - switching storage strategies only requires changes here
  */
 
 const TOKEN_KEY = 'asset_lending_token';

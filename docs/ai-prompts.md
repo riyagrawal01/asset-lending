@@ -100,3 +100,44 @@ The implementation added the authentication service, routes, middleware, client 
 ### What I corrected
 
 I reviewed the implementation and kept the authentication and role checking together in the existing middleware instead of introducing another middleware file. I also kept the token handling simple for now rather than adding refresh tokens or other authentication features that were not needed.
+
+## M04 — Catalogue
+
+### Prompt
+
+Implement the catalogue part of the equipment lending application using the existing React, Express, and MongoDB setup.
+
+Use the existing `Item` model and authentication/role middleware. Do not change the schema unless there is a real requirement that cannot be handled with the current model.
+
+Librarians should be able to:
+
+* create catalogue items
+* edit items
+* archive items
+* restore archived items
+
+Members should be able to view the catalogue but should not be able to modify it.
+
+Archived items should not appear in the normal catalogue list, but they must remain in the database so that their history is preserved.
+
+Add the required server routes, controllers, and service layer. Keep the controllers thin and put the catalogue logic in the service.
+
+Handle duplicate item codes, invalid requests, missing items, and unauthorized access with appropriate responses.
+
+For the client, add the catalogue API functions and the UI needed to view and manage items. Use the existing authentication flow and API client. The UI should show the appropriate actions based on the user's role, but authorization must still be enforced by the server.
+
+Keep this module focused on catalogue functionality. Do not implement loans, custodians, bulk operations, dashboard features, or advanced loan searching yet.
+
+Add tests for the main catalogue behaviour, including role restrictions, creating and editing items, archiving and restoring items, duplicate codes, and missing items.
+
+Run the complete test suite after the changes and make sure the existing functionality still works.
+
+### What I got
+
+The catalogue service, controller, routes, client API, catalogue UI, and 26 catalogue tests were added.
+
+### What I reviewed
+
+I checked the generated implementation against the existing models and authentication flow. No schema changes were needed, and the catalogue functionality was kept separate from the loan-related features that will be implemented later.
+I manually tested the APIs and functioning of the login and catlogue features.
+Reviewed the code and checked for unneccessary or reduntant code pieces.
