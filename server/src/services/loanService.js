@@ -73,6 +73,10 @@ async function executeWithFallback(executeOp) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// M05 — Loan lifecycle
+// ---------------------------------------------------------------------------
+
 async function requestLoan(itemId, borrowerId) {
   await checkItemAvailability(itemId);
 
@@ -230,6 +234,106 @@ async function markLoanLost(loanId, actorId, note) {
   return result;
 }
 
+// ---------------------------------------------------------------------------
+// M06 — Search / filter / paginate
+//
+// The query is built in stages so that all filtering happens in the database:
+//
+//  1. If a text search is provided, find matching Item IDs and User IDs first,
+//     then restrict the loan query to those IDs. This avoids downloading all
+//     loans to filter in JavaScript.
+//  2. Build the Loan filter from the resolved IDs plus any explicit filters
+//     (status, itemId, borrowerId).
+//  3. Run a countDocuments() and a find() with skip/limit in parallel so that
+//     the total is accurate even when paginating.
+//  4. Populate item and borrower fields.
+// ---------------------------------------------------------------------------
+
+async function searchLoans({
+  search = '',
+  status,
+  itemId,
+  borrowerId,
+  sort = 'requestedAt',
+  order = 'desc',
+  page = 1,
+  limit = 20,
+} = {}) {
+  const pageNum = Math.max(1, parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+  const skip = (pageNum - 1) * limitNum;
+
+  // Step 1 — resolve search term against items and users.
+  const filter = {};
+
+  if (search && search.trim()) {
+    const regex = new RegExp(search.trim(), 'i');
+    const [matchingItems, matchingUsers] = await Promise.all([
+      Item.find({ title: regex }, '_id').lean(),
+      User.find({ name: regex }, '_id').lean(),
+    ]);
+    const itemIds = matchingItems.map((i) => i._id);
+    const userIds = matchingUsers.map((u) => u._id);
+
+    // A loan matches if its item OR its borrower matches the search term.
+    filter.$or = [
+      { item: { $in: itemIds } },
+      { borrower: { $in: userIds } },
+    ];
+  }
+
+  // Step 2 — explicit field filters (override search when both provided).
+  if (status) filter.status = status;
+  if (itemId) filter.item = itemId;
+  if (borrowerId) filter.borrower = borrowerId;
+
+  // Step 3 — sort direction.
+  const SORTABLE = new Set(['requestedAt', 'dueDate', 'status', 'createdAt', 'updatedAt']);
+  const sortField = SORTABLE.has(sort) ? sort : 'requestedAt';
+  const sortDir = order === 'asc' ? 1 : -1;
+
+  // Step 4 — count + fetch in parallel.
+  const [total, docs] = await Promise.all([
+    Loan.countDocuments(filter),
+    Loan.find(filter)
+      .sort({ [sortField]: sortDir })
+      .skip(skip)
+      .limit(limitNum)
+      .populate('item', 'title code category')
+      .populate('borrower', 'name email')
+      .lean(),
+  ]);
+
+  const data = docs.map((doc) => ({
+    id: doc._id,
+    item: doc.item,
+    borrower: doc.borrower,
+    createdBy: doc.createdBy,
+    status: doc.status,
+    requestedAt: doc.requestedAt,
+    dueDate: doc.dueDate,
+    alertDismissed: doc.alertDismissed,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  }));
+
+  return {
+    data,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum),
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// M06 — Simple un-paginated loan list for members (own loans only).
+//        The existing M05 endpoint only supported this use-case. Kept for
+//        backward compatibility; the controller chooses which function to call.
+// ---------------------------------------------------------------------------
+
 async function getLoans(filters) {
   const query = {};
   if (filters.borrowerId) query.borrower = filters.borrowerId;
@@ -247,11 +351,120 @@ async function getLoans(filters) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// M06 — Bulk return
+//
+// Processes each loan independently. One failure does not stop the others.
+// Each successful return still goes through the existing returnLoan() logic
+// so that normal lifecycle validation and LoanEvent creation occur.
+// ---------------------------------------------------------------------------
+
+async function bulkReturn(loanIds, actorId) {
+  const results = [];
+
+  for (const loanId of loanIds) {
+    try {
+      await returnLoan(loanId, actorId);
+      results.push({ loanId, success: true });
+    } catch (err) {
+      results.push({ loanId, success: false, reason: err.message });
+    }
+  }
+
+  return { results };
+}
+
+// ---------------------------------------------------------------------------
+// M06 — Loan history
+//
+// Returns the LoanEvent timeline for a single loan in chronological order.
+// Members may only view history for their own loans.
+// ---------------------------------------------------------------------------
+
+async function getLoanHistory(loanId, requestingUser) {
+  const loan = await Loan.findById(loanId);
+  if (!loan) {
+    throw appError('Loan not found.', 404, 'LOAN_NOT_FOUND');
+  }
+
+  // Members may only see their own loan history.
+  if (
+    requestingUser.role === ROLES.MEMBER &&
+    loan.borrower.toString() !== requestingUser._id.toString()
+  ) {
+    throw appError('Access denied.', 403, 'FORBIDDEN');
+  }
+
+  const events = await LoanEvent.find({ loan: loanId })
+    .sort({ timestamp: 1 })
+    .populate('actor', 'name email role');
+
+  return events.map((e) => ({
+    id: e._id,
+    type: e.type,
+    actor: e.actor,
+    timestamp: e.timestamp,
+    note: e.note,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// M06 — Overdue alerts
+//
+// An active alert is a loan where:
+//   status === ISSUED  AND  dueDate < now  AND  alertDismissed !== true
+// ---------------------------------------------------------------------------
+
+async function getAlerts() {
+  const now = new Date();
+  const loans = await Loan.find({
+    status: LOAN_STATUSES.ISSUED,
+    dueDate: { $lt: now },
+    alertDismissed: { $ne: true },
+  })
+    .populate('item', 'title code category')
+    .populate('borrower', 'name email')
+    .sort({ dueDate: 1 }) // most overdue first
+    .lean();
+
+  return loans.map((doc) => ({
+    id: doc._id,
+    item: doc.item,
+    borrower: doc.borrower,
+    status: doc.status,
+    dueDate: doc.dueDate,
+    requestedAt: doc.requestedAt,
+    alertDismissed: doc.alertDismissed,
+  }));
+}
+
+async function dismissAlert(loanId, actorId) {
+  const loan = await Loan.findById(loanId);
+  if (!loan) {
+    throw appError('Loan not found.', 404, 'LOAN_NOT_FOUND');
+  }
+  if (loan.status !== LOAN_STATUSES.ISSUED) {
+    throw appError('Only issued loans can have alerts dismissed.', 409, 'INVALID_OPERATION');
+  }
+
+  loan.alertDismissed = true;
+  await loan.save();
+
+  return toLoanDTO(loan);
+}
+
 module.exports = {
+  // M05
   requestLoan,
   issueDirectLoan,
   issueRequestedLoan,
   returnLoan,
   markLoanLost,
-  getLoans
+  getLoans,
+  // M06
+  searchLoans,
+  bulkReturn,
+  getLoanHistory,
+  getAlerts,
+  dismissAlert,
 };

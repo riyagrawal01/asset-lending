@@ -1,4 +1,5 @@
 import { api } from './client';
+import { getToken } from '../utils/token';
 
 
 // Fetch the active (non-archived) catalogue.
@@ -44,3 +45,45 @@ export async function restoreItem(id) {
   const { item } = await api.post(`/items/${id}/restore`);
   return item;
 }
+
+// POST /api/items/import — CSV catalogue import (librarian only).
+// csvText should be the raw CSV string.
+export async function importCSV(csvText) {
+  const token = getToken();
+
+  const response = await fetch('/api/items/import', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/csv',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: csvText,
+  });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message = data?.error?.message || `Import failed (${response.status})`;
+    const err = new Error(message);
+    err.code = data?.error?.code || 'REQUEST_ERROR';
+    throw err;
+  }
+  return data;
+}
+
+// GET /api/items/export/on-loan — triggers browser download.
+export async function exportOnLoan() {
+  const token = getToken();
+  const response = await fetch('/api/items/export/on-loan', {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!response.ok) {
+    throw new Error(`Export failed (${response.status})`);
+  }
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'on-loan.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+

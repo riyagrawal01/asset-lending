@@ -143,6 +143,87 @@ async function restoreItem(id) {
   return toDTO(item);
 }
 
+// ---------------------------------------------------------------------------
+// M06 — CSV catalogue import
+//
+// Accepts an array of pre-parsed row objects { title, category, code }.
+// Each row is validated and attempted independently so that one bad row
+// does not stop unrelated valid rows from being imported.
+//
+// Returns { total, imported, failed, errors: [{ row, reason }] }.
+// ---------------------------------------------------------------------------
+
+async function importCSV(rows) {
+  let imported = 0;
+  const errors = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const rowNumber = i + 1;
+    const { title, category, code } = rows[i];
+
+    // Row-level validation
+    if (!title || !String(title).trim()) {
+      errors.push({ row: rowNumber, reason: 'Title is required.' });
+      continue;
+    }
+    if (!category || !String(category).trim()) {
+      errors.push({ row: rowNumber, reason: 'Category is required.' });
+      continue;
+    }
+    if (!code || !String(code).trim()) {
+      errors.push({ row: rowNumber, reason: 'Code is required.' });
+      continue;
+    }
+
+    try {
+      await createItem({ title, category, code });
+      imported++;
+    } catch (err) {
+      errors.push({ row: rowNumber, reason: err.message });
+    }
+  }
+
+  return {
+    total: rows.length,
+    imported,
+    failed: errors.length,
+    errors,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// M06 — CSV export: items currently on loan (status ISSUED)
+//
+// Runs a server-side query, formats the result as a CSV string.
+// The Loan model is required here to avoid circular imports if it were in
+// the loan service; we are only reading data.
+// ---------------------------------------------------------------------------
+
+async function exportOnLoan() {
+  const { Loan, LOAN_STATUSES } = require('../models/Loan');
+
+  const loans = await Loan.find({ status: LOAN_STATUSES.ISSUED })
+    .populate('item', 'title code category')
+    .populate('borrower', 'name email')
+    .sort({ dueDate: 1 })
+    .lean();
+
+  const header = 'itemCode,itemTitle,category,borrowerName,borrowerEmail,dueDate';
+  const rows = loans.map((l) => {
+    const esc = (v) => (v == null ? '' : `"${String(v).replace(/"/g, '""')}"`);
+    return [
+      esc(l.item?.code),
+      esc(l.item?.title),
+      esc(l.item?.category),
+      esc(l.borrower?.name),
+      esc(l.borrower?.email),
+      esc(l.dueDate ? new Date(l.dueDate).toISOString().slice(0, 10) : ''),
+    ].join(',');
+  });
+
+  return [header, ...rows].join('\r\n');
+}
+
 module.exports = {
   listItems,
   getItemById,
@@ -150,4 +231,6 @@ module.exports = {
   updateItem,
   archiveItem,
   restoreItem,
+  importCSV,
+  exportOnLoan,
 };

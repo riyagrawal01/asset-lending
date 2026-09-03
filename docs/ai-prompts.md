@@ -183,3 +183,41 @@ I reviewed the implementation against the existing project structure and manuall
 **### Result**
 
 All existing tests and the new loan tests are passing.
+
+---
+
+## M06 — Search, Bulk Operations, Dashboard, Alerts
+
+**### Prompt**
+
+Implement M06 on top of the existing M01–M05 implementation.
+
+Add the required search, filtering, sorting, and pagination for librarian loan views. All filtering and pagination must happen on the server/database; do not load the complete dataset into React.
+
+Add bulk loan returns where each loan is processed independently and successful returns are not affected by failures in other loans. Reuse the existing loan lifecycle and event handling.
+
+Add the required dashboard data using MongoDB aggregations. The dashboard must provide currently out, overdue, returned this week, total catalogue items, loans by status, custodian breakdown, and the previous eight weeks of returned-loan data. Do not calculate these statistics by loading the full loan history into the client.
+
+Add overdue alerts based on the existing derived overdue rule. Alerts must belong to individual loan instances, and librarians must be able to dismiss them.
+
+Add CSV catalogue import with row-level validation and partial success. Invalid rows should be reported without preventing valid rows from being imported. Add CSV export for all items currently out on loan.
+
+Add the required API routes, controllers, services, client API modules, and UI components while following the existing project structure and authentication/role rules.
+
+Keep the implementation focused on the M06 requirements. Do not introduce unnecessary dependencies, abstractions, caching, or unrelated features.
+
+Add tests covering the new functionality, role restrictions, partial CSV import, bulk-return behaviour, dashboard aggregations, alerts, search/filtering, pagination, and CSV export.
+
+Run the complete test suite and client build after implementation. Do not commit anything to Git.
+
+**### What I got**
+
+The M06 search, bulk-return, dashboard, alert, CSV import/export, API, UI, and test functionality was implemented.
+
+**### What I reviewed**
+
+I reviewed the implementation and manually tested the M06 features along with the existing application functionality.
+
+During testing, I found an authentication issue with CSV upload where the request was using the wrong token. I corrected the client-side authentication handling so the upload uses the existing authenticated token correctly.
+
+The complete test suite passed and the client build completed successfully.

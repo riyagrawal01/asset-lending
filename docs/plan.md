@@ -132,5 +132,25 @@ M1 was completed. The client and server run independently, the development setup
 
 
 ---
+### M06 — Search, Bulk Operations, Dashboard, Alerts
+
+**Scope:** Server-side loan search, filtering and pagination; bulk loan returns; dashboard aggregations; overdue alerts; CSV catalogue import; and CSV export of currently on-loan items.
+
+**What was added:**
+
+1. `services/loanService.js` — extended loan functionality with server-side search/filtering/pagination, bulk returns, loan history, and overdue alerts. Bulk returns reuse the existing return lifecycle so validation and `LoanEvent` creation remain consistent.
+
+2. `services/dashboardService.js` — added MongoDB aggregations for dashboard statistics, loan status breakdown, custodian breakdown, and the eight-week return trend. Calculations remain on the server.
+
+3. `services/itemService.js` — added CSV catalogue import with row-level validation and partial success, plus server-side CSV export of currently on-loan items.
+
+4. `controllers/` and `routes/` — added the required endpoints for search, bulk returns, loan history, alerts, dashboard, CSV import, and CSV export. Existing authentication and role middleware is reused.
+
+5. Client API modules — extended the existing loan and item APIs and added the dashboard API.
+
+6. Client features — added server-side loan search/filtering/pagination, bulk return controls, loan history, dashboard, overdue alerts, and catalogue import/export interfaces.
+
+
+---
 
 *Later modules will be recorded here as they are completed.*

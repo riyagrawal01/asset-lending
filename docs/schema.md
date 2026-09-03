@@ -170,6 +170,7 @@ If the search becomes a bottleneck at larger data volumes, denormalizing frequen
 | User          | `{ email: 1 }` unique              | Login lookup by email and uniqueness                                  |
 | Item          | `{ code: 1 }` unique               | Lookup by catalogue code and uniqueness                               |
 | Loan          | `{ item: 1 }` unique, partial      | Prevent more than one open loan (`REQUESTED` or `ISSUED`) for an item |
+| Loan          | `{ item: 1, status: 1 }`           | Support queries filtering loans by item and status                    |
 | Loan          | `{ borrower: 1, status: 1 }`       | Retrieve and filter a member's loans                                  |
 | Loan          | `{ status: 1, dueDate: 1 }`        | Find issued loans by due date for overdue-related queries             |
 | Loan          | `{ item: 1, requestedAt: -1 }`     | Retrieve an item's loan history in request order                      |

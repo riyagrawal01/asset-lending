@@ -64,6 +64,8 @@ const loanSchema = new Schema(
   }
 );
 
+loanSchema.index({ item: 1, status: 1 });
+
 loanSchema.index({ borrower: 1, status: 1 });
 
 loanSchema.index({ status: 1, dueDate: 1 });
