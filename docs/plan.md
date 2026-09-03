@@ -108,4 +108,29 @@ M1 was completed. The client and server run independently, the development setup
 
 ---
 
+### M05 — Loans
+
+**Scope:** Added the loan lifecycle from requesting an item through issuing, returning, or marking it lost. The module also handles item availability and concurrent issue attempts.
+
+**What was added:**
+
+1. `models/Loan.js` — added a partial unique index so an item can have only one open loan (`REQUESTED` or `ISSUED`) at a time.
+
+2. `services/loanService.js` — implemented the loan lifecycle and its validation. Loan changes and their `LoanEvent` records are handled together using MongoDB transactions. Duplicate-key conflicts are converted into a clear item-unavailable error.
+
+3. `controllers/loanController.js` and `routes/loans.js` — added the loan endpoints and applied the existing role-based access control.
+
+4. `__tests__/loans.test.js` — added tests for the lifecycle, permissions, loan events, availability rules, and concurrent issue handling. MongoDB transactions are mocked in the test environment because the current `mongodb-memory-server` setup does not reliably support transactions.
+
+5. `client/src/api/loansApi.js` — added the API functions used by the client.
+
+6. `client/src/features/LoansPage.jsx` — added the initial loans view with the actions needed for members and librarians.
+
+7. `client/src/features/CataloguePage.jsx` — added the option for members to request an item.
+
+8. `client/src/app/App.jsx` — added navigation between the Catalogue and Loans views.
+
+
+---
+
 *Later modules will be recorded here as they are completed.*

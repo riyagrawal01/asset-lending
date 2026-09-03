@@ -134,14 +134,50 @@
   letter-spacing: 0.02em;
 }
 
+/* legacy alias kept for catalogue page */
+.badge-active,
+.badge-issued {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-requested {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.badge-returned {
+  background: #f3f4f6;
+  color: #374151;
+}
+
 .badge-archived {
   background: #f3f4f6;
   color: #6b7280;
 }
 
-.badge-active {
-  background: #dcfce7;
-  color: #16a34a;
+/* OVERDUE — red */
+.badge-overdue {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* Inline issue form inside the Actions cell */
+.issue-form {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.issue-form input[type="date"] {
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-surface);
 }
 
 /* Empty state */

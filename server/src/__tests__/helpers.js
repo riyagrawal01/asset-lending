@@ -19,8 +19,12 @@ async function setupDB() {
 }
 
 async function teardownDB() {
-  await mongoose.disconnect();
-  await mongod.stop();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+  if (mongod) {
+    await mongod.stop();
+  }
 }
 
 async function clearDB() {

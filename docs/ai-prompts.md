@@ -141,3 +141,45 @@ The catalogue service, controller, routes, client API, catalogue UI, and 26 cata
 I checked the generated implementation against the existing models and authentication flow. No schema changes were needed, and the catalogue functionality was kept separate from the loan-related features that will be implemented later.
 I manually tested the APIs and functioning of the login and catlogue features.
 Reviewed the code and checked for unneccessary or reduntant code pieces.
+
+---
+**## M05 — Loans**
+
+**### Prompt**
+
+Implement the loan functionality using the existing models, authentication, and catalogue features.
+
+The loan lifecycle should be:
+
+`REQUESTED → ISSUED → RETURNED/LOST`
+
+Members should be able to request available items and view their own loans. Librarians should be able to view loans and perform the required issue, return, and lost actions.
+
+Keep the existing `Loan` state machine and derive overdue status from `ISSUED` loans whose `dueDate` has passed. Do not add an `OVERDUE` status or an `available` field to `Item`.
+
+An item must not have more than one open loan (`REQUESTED` or `ISSUED`). Enforce this at the database level using the appropriate partial unique index, and handle conflicts cleanly in the service layer.
+
+Keep loan and `LoanEvent` changes consistent by using MongoDB transactions where required. Create a `LoanEvent` for each valid lifecycle action.
+
+Add the required service, controller, routes, tests, and minimal client integration. Keep role checks on the server and follow the existing project structure.
+
+Do not implement dashboard features, bulk operations, advanced loan searching, or overdue alerts yet.
+
+Run the complete test suite and make sure all previous modules continue to work.
+
+Do not commit anything to Git.
+
+**### What I got**
+
+The loan service, controller, routes, tests, client API, and loans UI were added. The catalogue was also updated so members can request items, and simple navigation between Catalogue and Loans was added.
+
+A partial unique index was added to prevent multiple open loans for the same item. The loan lifecycle and role restrictions were implemented in the service and route layers.
+
+**### What I reviewed**
+
+I reviewed the implementation against the existing project structure and manually tested the functionality added so far, including authentication, catalogue operations, and the loan lifecycle. I also checked that the existing test suites continue to pass.
+
+
+**### Result**
+
+All existing tests and the new loan tests are passing.

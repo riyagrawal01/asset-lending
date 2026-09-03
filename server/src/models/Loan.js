@@ -64,14 +64,20 @@ const loanSchema = new Schema(
   }
 );
 
-
-loanSchema.index({ item: 1, status: 1 });
-
 loanSchema.index({ borrower: 1, status: 1 });
 
 loanSchema.index({ status: 1, dueDate: 1 });
 
 loanSchema.index({ item: 1, requestedAt: -1 });
+
+// Partial unique index to enforce at most one open loan per item
+loanSchema.index(
+  { item: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: { $in: [LOAN_STATUSES.REQUESTED, LOAN_STATUSES.ISSUED] } },
+  }
+);
 
 const Loan = mongoose.model('Loan', loanSchema);
 

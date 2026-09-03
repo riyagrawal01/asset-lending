@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { listItems, listAllItems, archiveItem, restoreItem } from '../api/itemsApi';
+import { requestLoan } from '../api/loansApi';
 import ItemFormModal from './ItemFormModal';
 
 /**
@@ -103,7 +104,7 @@ export default function CataloguePage({ user }) {
               <th>Title</th>
               <th>Category</th>
               {isLibrarian && <th>Status</th>}
-              {isLibrarian && <th>Actions</th>}
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -119,33 +120,50 @@ export default function CataloguePage({ user }) {
                     </span>
                   </td>
                 )}
-                {isLibrarian && (
-                  <td>
-                    <div className="actions">
-                      <button
-                        className="btn btn-secondary"
-                        onClick={() => setModal({ mode: 'edit', item })}
+                <td>
+                  <div className="actions">
+                    {!isLibrarian && (
+                      <button 
+                        className="btn btn-primary"
+                        onClick={async () => {
+                          try {
+                            await requestLoan(item.id);
+                            alert('Loan requested successfully.');
+                          } catch (err) {
+                            setActionError(err.message);
+                          }
+                        }}
                       >
-                        Edit
+                        Request
                       </button>
-                      {item.archived ? (
+                    )}
+                    {isLibrarian && (
+                      <>
                         <button
-                          className="btn btn-success"
-                          onClick={() => handleRestore(item)}
+                          className="btn btn-secondary"
+                          onClick={() => setModal({ mode: 'edit', item })}
                         >
-                          Restore
+                          Edit
                         </button>
-                      ) : (
-                        <button
-                          className="btn btn-danger"
-                          onClick={() => handleArchive(item)}
-                        >
-                          Archive
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                )}
+                        {item.archived ? (
+                          <button
+                            className="btn btn-success"
+                            onClick={() => handleRestore(item)}
+                          >
+                            Restore
+                          </button>
+                        ) : (
+                          <button
+                            className="btn btn-danger"
+                            onClick={() => handleArchive(item)}
+                          >
+                            Archive
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

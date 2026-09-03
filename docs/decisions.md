@@ -34,10 +34,10 @@ Important design decisions made during M02.
 
 ---
 
-## Decision 4 — Availability comes from loans
+## Decision 4 — Availability enforced through open loans
 
-**Chose:** Determine whether an item is available from its open loans.
+**Chose**: Determine availability from open loans and enforce one open loan per item with a partial unique index.
 
-**Rejected:** Storing an `available` flag on `Item`.
+**Rejected**: Storing an available flag on Item.
 
-**Why:** An availability flag would create a second source of truth. The atomic issue operation will be decided when the loan service is implemented.
+**Why**: Avoids having two sources of truth and prevents concurrent requests from creating multiple open loans for the same item.
