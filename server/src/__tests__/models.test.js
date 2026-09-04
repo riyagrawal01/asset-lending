@@ -38,7 +38,7 @@ describe('User model', () => {
   });
 
   it('rejects an invalid role', () => {
-    const doc = new User({ name: 'A', email: 'a@a.com', passwordHash: 'x', role: 'ADMIN' });
+    const doc = new User({ name: 'A', email: 'a@a.com', passwordHash: 'x', role: 'INVALID_ROLE' });
     const err = doc.validateSync();
     expect(err.errors.role).toBeDefined();
   });

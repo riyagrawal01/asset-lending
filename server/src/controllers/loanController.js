@@ -8,7 +8,7 @@ const { ROLES } = require('../models/User');
 // Member: simple list of their own loans (no pagination UI needed for members).
 async function getLoans(req, res, next) {
   try {
-    if (req.user.role === ROLES.LIBRARIAN) {
+    if (req.user.role === ROLES.LIBRARIAN || req.user.role === ROLES.ADMIN) {
       const { search, status, itemId, borrowerId, sort, order, page, limit } = req.query;
       const result = await loanService.searchLoans({
         search, status, itemId, borrowerId, sort, order, page, limit,

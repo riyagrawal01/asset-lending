@@ -7,12 +7,11 @@ const { authenticate, requireRole } = require('../middleware/auth');
 const router = Router();
 
 router.use(authenticate);
-router.use(requireRole('LIBRARIAN'));
 
-// GET /api/alerts — active overdue alerts (librarian only)
-router.get('/', loanController.getAlerts);
+// GET /api/alerts — active overdue alerts (librarian and admin)
+router.get('/', requireRole('LIBRARIAN', 'ADMIN'), loanController.getAlerts);
 
-// POST /api/alerts/:loanId/dismiss — dismiss a specific loan's alert
-router.post('/:loanId/dismiss', loanController.dismissAlert);
+// POST /api/alerts/:loanId/dismiss — dismiss a specific loan's alert (librarian only)
+router.post('/:loanId/dismiss', requireRole('LIBRARIAN'), loanController.dismissAlert);
 
 module.exports = router;

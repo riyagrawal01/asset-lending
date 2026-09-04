@@ -6,7 +6,7 @@ const { authenticate, requireRole } = require('../middleware/auth');
 
 const router = Router();
 
-// GET /api/dashboard — librarian only
-router.get('/', authenticate, requireRole('LIBRARIAN'), dashboardController.getDashboard);
+// GET /api/dashboard — librarian and admin
+router.get('/', authenticate, requireRole('LIBRARIAN', 'ADMIN'), dashboardController.getDashboard);
 
 module.exports = router;

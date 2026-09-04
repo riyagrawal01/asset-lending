@@ -4,15 +4,15 @@
 
 ### users
 
-| Field          | Type     | Notes                        |
-| -------------- | -------- | ---------------------------- |
-| `_id`          | ObjectId | MongoDB primary key          |
-| `name`         | String   | required, trimmed            |
-| `email`        | String   | required, unique, lowercased |
-| `passwordHash` | String   | required, `select: false`    |
-| `role`         | String   | enum: `LIBRARIAN`, `MEMBER`  |
-| `createdAt`    | Date     | set by Mongoose timestamps   |
-| `updatedAt`    | Date     | set by Mongoose timestamps   |
+| Field          | Type     | Notes                                |
+| -------------- | -------- | ------------------------------------ |
+| `_id`          | ObjectId | MongoDB primary key                  |
+| `name`         | String   | required, trimmed                    |
+| `email`        | String   | required, unique, lowercased         |
+| `passwordHash` | String   | required, `select: false`            |
+| `role`         | String   | enum: `LIBRARIAN`, `MEMBER`,`ADMIN`  |
+| `createdAt`    | Date     | set by Mongoose timestamps           |
+| `updatedAt`    | Date     | set by Mongoose timestamps           |
 
 **Constraints:**
 

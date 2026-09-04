@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const ROLES = Object.freeze({
+  ADMIN: 'ADMIN',
   LIBRARIAN: 'LIBRARIAN',
   MEMBER: 'MEMBER',
 });

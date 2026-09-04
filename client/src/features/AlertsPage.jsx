@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAlerts, dismissAlert } from '../api/loansApi';
 
-export default function AlertsPage() {
+export default function AlertsPage({ user }) {
+  const isLibrarian = user.role === 'LIBRARIAN';
   const [alerts, setAlerts]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
@@ -60,7 +61,7 @@ export default function AlertsPage() {
               <th>Borrower</th>
               <th>Due Date</th>
               <th>Days Overdue</th>
-              <th>Actions</th>
+              {isLibrarian && <th>Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -77,15 +78,17 @@ export default function AlertsPage() {
                 <td style={{ color: 'var(--color-danger)', fontWeight: 600 }}>
                   {daysOverdue(alert.dueDate)} days
                 </td>
-                <td>
-                  <button
-                    className="btn btn-secondary"
-                    onClick={() => handleDismiss(alert.id)}
-                    disabled={dismissing === alert.id}
-                  >
-                    {dismissing === alert.id ? 'Dismissing…' : 'Dismiss'}
-                  </button>
-                </td>
+                {isLibrarian && (
+                  <td>
+                    <button
+                      className="btn btn-secondary"
+                      onClick={() => handleDismiss(alert.id)}
+                      disabled={dismissing === alert.id}
+                    >
+                      {dismissing === alert.id ? 'Dismissing…' : 'Dismiss'}
+                    </button>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

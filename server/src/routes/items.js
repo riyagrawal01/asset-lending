@@ -11,7 +11,7 @@ const router = Router();
 router.get('/', authenticate, itemController.listItems);
 
 // GET /api/items/archived — all items including archived (librarian only)
-router.get('/archived', authenticate, requireRole('LIBRARIAN'), itemController.listArchivedItems);
+router.get('/archived', authenticate, requireRole('LIBRARIAN', 'ADMIN'), itemController.listArchivedItems);
 
 // POST /api/items/import — CSV catalogue import (librarian only)
 // Uses express.text() to receive the CSV body as a plain string.

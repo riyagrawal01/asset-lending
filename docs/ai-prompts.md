@@ -221,3 +221,56 @@ I reviewed the implementation and manually tested the M06 features along with th
 During testing, I found an authentication issue with CSV upload where the request was using the wrong token. I corrected the client-side authentication handling so the upload uses the existing authenticated token correctly.
 
 The complete test suite passed and the client build completed successfully.
+
+--- 
+**## M07 — Admin Management**
+
+**### Prompt**
+
+Implement the Admin functionality for the equipment lending application without disrupting the existing MEMBER and LIBRARIAN functionality.
+
+Add `ADMIN` as a valid role. There will be only one Admin.
+
+The Admin must have two management capabilities:
+
+1. **User Role Management**
+
+   * View registered users.
+   * Change users between `MEMBER` and `LIBRARIAN`.
+   * Do not allow creating or modifying an `ADMIN`.
+   * When a `LIBRARIAN` is changed to `MEMBER`, remove that user's `ItemCustodian` records but do not delete any catalogue items.
+   * Notify the Admin about the number of custodian assignments removed.
+
+2. **Item Custodian Management**
+
+   * Select an item.
+   * Display librarians with searchable checkboxes.
+   * Show the current custodian selections.
+   * Allow the Admin to add/remove custodians and save or cancel changes.
+   * Only modify the `ItemCustodian` collection.
+
+Create a dedicated Admin route, service, controller, API module, and separate UI pages for these features.
+
+Admin should also be able to view and search the same Catalogue, Loans, Dashboard, and Alerts information available to librarians, including archived catalogue items, but must not perform librarian actions such as creating/editing catalogue items, issuing/returning loans, or dismissing alerts.
+
+Keep the existing architecture and avoid unnecessary schema or dependency changes.
+
+Add tests covering Admin authorization, role changes, librarian downgrade cleanup, custodian synchronization, and Admin read-only access.
+
+Run the full backend test suite and client build after implementation.
+
+Do not commit anything.
+
+**### What I got**
+
+The Admin role, user role management, item custodian management, Admin pages, API, routes, and read-only access to the existing librarian views were implemented.
+
+**### What I reviewed**
+
+Reviewed and manually tested the Admin functionality and the existing M01–M06 features. Verified role changes, custodian assignment/removal, librarian downgrade cleanup, Admin read-only access, backend tests, and client build.
+
+**### What I corrected**
+
+The existing model test that treated `ADMIN` as an invalid role was updated to use `INVALID_ROLE` after adding the new valid role.
+
+An issue in the Admin read-only integration was also corrected so Admins can access the librarian views without receiving librarian-only modification controls.

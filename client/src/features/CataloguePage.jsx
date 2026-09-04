@@ -11,6 +11,8 @@ import ItemFormModal from './ItemFormModal';
  */
 export default function CataloguePage({ user }) {
   const isLibrarian = user.role === 'LIBRARIAN';
+  const isAdmin = user.role === 'ADMIN';
+  const canViewArchived = isLibrarian || isAdmin;
 
   const [items, setItems] = useState([]);
   const [showArchived, setShowArchived] = useState(false);
@@ -35,7 +37,7 @@ export default function CataloguePage({ user }) {
     setLoading(true);
     setError(null);
     try {
-      const fetched = isLibrarian && showArchived
+      const fetched = canViewArchived && showArchived
         ? await listAllItems()
         : await listItems();
       setItems(fetched);
@@ -44,7 +46,7 @@ export default function CataloguePage({ user }) {
     } finally {
       setLoading(false);
     }
-  }, [isLibrarian, showArchived]);
+  }, [canViewArchived, showArchived]);
 
   useEffect(() => {
     fetchItems();
@@ -169,7 +171,7 @@ export default function CataloguePage({ user }) {
             </button>
           )}
         </div>
-        {isLibrarian && (
+        {canViewArchived && (
           <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
             <input
               type="checkbox"
@@ -214,7 +216,7 @@ export default function CataloguePage({ user }) {
                 <th>Code</th>
                 <th>Title</th>
                 <th>Category</th>
-                {isLibrarian && <th>Status</th>}
+                {canViewArchived && <th>Status</th>}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -226,7 +228,7 @@ export default function CataloguePage({ user }) {
                     <td><code>{item.code}</code></td>
                     <td>{item.title}</td>
                     <td>{item.category}</td>
-                    {isLibrarian && (
+                    {canViewArchived && (
                       <td>
                         <span className={`badge ${item.archived ? 'badge-archived' : 'badge-active'}`}>
                           {item.archived ? 'Archived' : 'Active'}
@@ -235,7 +237,7 @@ export default function CataloguePage({ user }) {
                     )}
                     <td>
                       <div className="actions">
-                        {!isLibrarian && (
+                        {user.role === 'MEMBER' && (
                           <button 
                             className="btn btn-primary"
                             onClick={async () => {

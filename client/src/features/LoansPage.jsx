@@ -24,13 +24,15 @@ const STATUS_OPTIONS = ['', 'REQUESTED', 'ISSUED', 'RETURNED', 'LOST'];
 
 export default function LoansPage({ user, filter }) {
   const isLibrarian = user.role === 'LIBRARIAN';
+  const isAdmin = user.role === 'ADMIN';
+  const canViewAll = isLibrarian || isAdmin;
 
   // Data state
   const [result, setResult]           = useState({ data: [], pagination: null });
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState(null);
 
-  // Search / filter / pagination (librarian only)
+  // Search / filter / pagination (librarian/admin only)
   const [search, setSearch]           = useState('');
   const [statusFilter, setStatus]     = useState('');
   const [sort, setSort]               = useState('requestedAt');
@@ -79,8 +81,12 @@ export default function LoansPage({ user, filter }) {
 
   // Build query params and fetch whenever filters change.
   const runQuery = useCallback((overrides = {}) => {
-    const params = isLibrarian
-      ? {
+    let params = {};
+    if (canViewAll) {
+      if (filter === 'requests') {
+        params = { status: 'REQUESTED', sort, order, page, limit: LIMIT, ...overrides };
+      } else {
+        params = {
           ...(search ? { search } : {}),
           ...(statusFilter ? { status: statusFilter } : {}),
           sort,
@@ -88,10 +94,11 @@ export default function LoansPage({ user, filter }) {
           page,
           limit: LIMIT,
           ...overrides,
-        }
-      : {};
+        };
+      }
+    }
     fetchLoans(params);
-  }, [isLibrarian, search, statusFilter, sort, order, page, fetchLoans]);
+  }, [canViewAll, filter, search, statusFilter, sort, order, page, fetchLoans]);
 
   useEffect(() => { runQuery(); }, [runQuery]);
 
@@ -212,7 +219,7 @@ export default function LoansPage({ user, filter }) {
   // Members get a client-side text filter applied on top of their full list.
   const baseLoans = result.data;
 
-  const filteredLoans = (!isLibrarian && memberSearch.trim())
+  const filteredLoans = (!canViewAll && memberSearch.trim())
     ? (() => {
         const q = memberSearch.trim().toLowerCase();
         return baseLoans.filter(l =>
@@ -224,7 +231,7 @@ export default function LoansPage({ user, filter }) {
     : baseLoans;
 
   // Client-side pagination for members
-  const isClientPaginated = !isLibrarian;
+  const isClientPaginated = !canViewAll;
   const displayedLoans = isClientPaginated
     ? filteredLoans.slice((page - 1) * LIMIT, page * LIMIT)
     : filteredLoans;
@@ -234,7 +241,7 @@ export default function LoansPage({ user, filter }) {
 
   const pageTitle  = filter === 'requests'
     ? 'Loan Requests'
-    : (isLibrarian ? 'All Loans' : 'My Loans');
+    : (canViewAll ? 'All Loans' : 'My Loans');
 
   const issuedOnPage = displayedLoans.filter(l => l.status === 'ISSUED');
   const allIssuedSelected = issuedOnPage.length > 0 && issuedOnPage.every(l => selected.has(l.id));
@@ -255,9 +262,8 @@ export default function LoansPage({ user, filter }) {
           </button>
         )}
       </div>
-
-  // Search / filter bar — librarians only, All Loans view
-      {isLibrarian && filter !== 'requests' && (
+      
+      {canViewAll && filter !== 'requests' && (
         <div className="catalogue-toolbar" style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
           <input
             type="text"
@@ -292,7 +298,7 @@ export default function LoansPage({ user, filter }) {
       )}
 
       {/* Search bar for members — client-side filter over their own loans */}
-      {!isLibrarian && (
+      {!canViewAll && (
         <div className="catalogue-toolbar" style={{ marginBottom: '1rem' }}>
           <input
             type="text"
@@ -348,7 +354,7 @@ export default function LoansPage({ user, filter }) {
                   </th>
                 )}
                 <th>Item</th>
-                {isLibrarian && <th>Borrower</th>}
+                {canViewAll && <th>Borrower</th>}
                 <th>Status</th>
                 <th>Requested</th>
                 <th>Due Date</th>
@@ -375,7 +381,7 @@ export default function LoansPage({ user, filter }) {
                       {loan.item?.title}{' '}
                       <span style={{ color: 'var(--color-text-muted)' }}>({loan.item?.code})</span>
                     </td>
-                    {isLibrarian && <td>{loan.borrower?.name ?? '—'}</td>}
+                    {canViewAll && <td>{loan.borrower?.name ?? '—'}</td>}
                     <td><StatusBadge status={loan.status} dueDate={loan.dueDate} /></td>
                     <td>{new Date(loan.requestedAt).toLocaleDateString()}</td>
                     <td>{loan.dueDate ? new Date(loan.dueDate).toLocaleDateString() : '—'}</td>
@@ -428,7 +434,7 @@ export default function LoansPage({ user, filter }) {
                   {/* Inline history drawer */}
                   {historyLoanId === loan.id && (
                     <tr>
-                      <td colSpan={isLibrarian ? (filter !== 'requests' ? 8 : 7) : 5}
+                      <td colSpan={canViewAll ? (isLibrarian ? (filter !== 'requests' ? 8 : 7) : 6) : 5}
                           style={{ background: '#f8fafc', padding: '0.75rem 1.5rem' }}>
                         {historyLoading ? (
                           <span style={{ color: 'var(--color-text-muted)' }}>Loading history…</span>

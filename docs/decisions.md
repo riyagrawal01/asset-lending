@@ -41,3 +41,23 @@ Important design decisions made during M02.
 **Rejected**: Storing an available flag on Item.
 
 **Why**: Avoids having two sources of truth and prevents concurrent requests from creating multiple open loans for the same item.
+
+---
+
+## DEcision 5- Server-side search and aggregation
+
+**Chose**: Perform loan filtering, sorting, pagination, and dashboard calculations in MongoDB.
+
+**Rejected**: Loading the complete dataset into React or Node and processing it there.
+
+**Why**: Reduces data transfer and keeps database operations efficient as the dataset grows.
+
+---
+
+## Decision 6- Librarian downgrade cleanup
+
+**Chose**: When a LIBRARIAN becomes a MEMBER, remove their ItemCustodian assignments but preserve all catalogue items.
+
+**Rejected**: Deleting items or retaining invalid custodian assignments.
+
+**Why**: The user's role changes, but catalogue data and item history must remain intact.

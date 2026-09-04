@@ -5,12 +5,14 @@ import CataloguePage from '../features/CataloguePage';
 import LoansPage from '../features/LoansPage';
 import DashboardPage from '../features/DashboardPage';
 import AlertsPage from '../features/AlertsPage';
+import AdminUsersPage from '../features/AdminUsersPage';
+import AdminCustodiansPage from '../features/AdminCustodiansPage';
 import './catalogue.css';
 
 /**
  * App - root component.
  *
- * Views: catalogue | loans | requests | dashboard | alerts
+ * Views: catalogue | loans | requests | dashboard | alerts | admin_users | admin_custodians
  */
 export default function App() {
   const [user, setUser]             = useState(undefined); // undefined = loading, null = unauthenticated
@@ -39,6 +41,9 @@ export default function App() {
   }
 
   const isLibrarian = user.role === 'LIBRARIAN';
+  const isAdmin = user.role === 'ADMIN';
+
+  const canViewAll = isLibrarian || isAdmin;
 
   function NavBtn({ view, label }) {
     const active = currentView === view;
@@ -58,9 +63,12 @@ export default function App() {
       <div className="auth-bar">
         <NavBtn view="catalogue" label="Catalogue" />
         {isLibrarian && <NavBtn view="requests"  label="Requests" />}
-        <NavBtn view="loans" label={isLibrarian ? 'All Loans' : 'My Loans'} />
-        {isLibrarian && <NavBtn view="dashboard" label="Dashboard" />}
-        {isLibrarian && <NavBtn view="alerts"    label="Alerts" />}
+        <NavBtn view="loans" label={canViewAll ? 'All Loans' : 'My Loans'} />
+        {canViewAll && <NavBtn view="dashboard" label="Dashboard" />}
+        {canViewAll && <NavBtn view="alerts"    label="Alerts" />}
+        
+        {isAdmin && <NavBtn view="admin_users" label="Users" />}
+        {isAdmin && <NavBtn view="admin_custodians" label="Custodians" />}
 
         <div style={{ flex: 1 }} />
         <span className="user-info">{user.name}</span>
@@ -72,8 +80,11 @@ export default function App() {
       {currentView === 'catalogue'  && <CataloguePage user={user} />}
       {currentView === 'loans'      && <LoansPage user={user} filter="all" />}
       {currentView === 'requests'   && <LoansPage user={user} filter="requests" />}
-      {currentView === 'dashboard'  && isLibrarian && <DashboardPage />}
-      {currentView === 'alerts'     && isLibrarian && <AlertsPage />}
+      {currentView === 'dashboard'  && canViewAll && <DashboardPage />}
+      {currentView === 'alerts'     && canViewAll && <AlertsPage user={user} />}
+      
+      {currentView === 'admin_users' && isAdmin && <AdminUsersPage />}
+      {currentView === 'admin_custodians' && isAdmin && <AdminCustodiansPage />}
     </>
   );
 }

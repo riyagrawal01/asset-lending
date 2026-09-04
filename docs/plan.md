@@ -11,8 +11,9 @@ The order is:
 3. Authentication and roles
 4. Catalogue and custodians
 5. Loans and loan lifecycle
-6. Search, bulk operations and dashboard
-7. Alerts, testing and final setup
+6. Search, bulk operations, dashboard, alerts.
+7. Admin role and its features.
+8. Alerts, testing and final setup
 
 I started with the foundation because the rest of the application depends on having the client, server and database connection working. The schema comes next because the later features depend on it. Authentication is added before the application features so that access rules can be built into the APIs from the beginning.
 
@@ -152,5 +153,43 @@ M1 was completed. The client and server run independently, the development setup
 
 
 ---
+**## M07 — Admin Management**
+
+**### Scope**
+
+Add the `ADMIN` role and provide Admin-only management of user roles and item custodians, while preserving all existing MEMBER and LIBRARIAN functionality.
+
+**### What was build**
+
+1. `models/User.js` — add `ADMIN` as a valid role.
+
+2. `services/adminService.js` — implement Admin business logic for user role changes and `ItemCustodian` synchronization. When a `LIBRARIAN` is changed to `MEMBER`, remove only their `ItemCustodian` records and preserve all catalogue items.
+
+3. `controllers/adminController.js` and `routes/admin.js` — expose Admin-only endpoints through a dedicated `/api/admin` router.
+
+4. `client/src/api/adminApi.js` — API functions for Admin user and custodian management.
+
+5. `client/src/features/AdminUsersPage.jsx` — allow Admin to change users between `MEMBER` and `LIBRARIAN`.
+
+6. `client/src/features/AdminCustodiansPage.jsx` — allow Admin to select an item and manage its librarian custodians using searchable checkboxes with Save/Cancel.
+
+7. `client/src/app/App.jsx` — add Admin navigation for Users and Custodians.
+
+8. Extend Admin read-only access to existing Catalogue, Loans, Dashboard, and Alerts views. Admin can see and search the same information as a librarian, including archived catalogue items, but cannot perform librarian actions.
+
+**### Important rules**
+
+* Only one `ADMIN` role is supported.
+* Admin cannot create or modify another Admin.
+* Changing `LIBRARIAN → MEMBER` removes that user's `ItemCustodian` assignments but never deletes catalogue items.
+* Custodian management modifies only the `ItemCustodian` collection.
+* Admin remains read-only for Catalogue, Loans, Dashboard, and Alerts.
+
+**### Verification**
+
+Add Admin tests covering role management, custodian synchronization, authorization, librarian downgrade cleanup, and read-only access.
+
+Run the complete backend test suite and client build. Verify existing M01–M06 functionality remains unaffected.
+
 
 *Later modules will be recorded here as they are completed.*
