@@ -1,4 +1,4 @@
-import { api } from './client';
+import { api, BASE_URL } from './client';
 import { getToken } from '../utils/token';
 
 
@@ -51,7 +51,7 @@ export async function restoreItem(id) {
 export async function importCSV(csvText) {
   const token = getToken();
 
-  const response = await fetch('/api/items/import', {
+  const response = await fetch(`${BASE_URL}/items/import`, {
     method: 'POST',
     headers: {
       'Content-Type': 'text/csv',
@@ -72,7 +72,7 @@ export async function importCSV(csvText) {
 // GET /api/items/export/on-loan — triggers browser download.
 export async function exportOnLoan() {
   const token = getToken();
-  const response = await fetch('/api/items/export/on-loan', {
+  const response = await fetch(`${BASE_URL}/items/export/on-loan`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!response.ok) {

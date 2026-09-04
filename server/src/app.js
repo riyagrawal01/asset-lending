@@ -18,9 +18,11 @@ const app = express();
 
 app.use(helmet());
 
+const { clientOrigin } = require('./config/env');
+
 // CORS in dev, allow the Vite dev server
-const allowedOrigins = process.env.CLIENT_ORIGIN
-  ? process.env.CLIENT_ORIGIN.split(',').map((o) => o.trim())
+const allowedOrigins = clientOrigin
+  ? clientOrigin.split(',').map((o) => o.trim())
   : ['http://localhost:5173'];
 
 

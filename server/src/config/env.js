@@ -15,9 +15,12 @@ if (!jwtSecret) {
   throw new Error('JWT_SECRET environment variable is required');
 }
 
+const clientOrigin = process.env.CLIENT_ORIGIN;
+
 module.exports = {
   env,
   port,
   mongoUri,
   jwtSecret,
+  clientOrigin,
 };
