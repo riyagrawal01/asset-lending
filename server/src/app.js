@@ -12,6 +12,7 @@ const loansRouter = require('./routes/loans');
 const dashboardRouter = require('./routes/dashboard');
 const alertsRouter = require('./routes/alerts');
 const adminRouter = require('./routes/admin');
+const notifRouter = require('./routes/notif');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/loans', loansRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/notif', notifRouter);
 
 
 app.use((req, res) => {

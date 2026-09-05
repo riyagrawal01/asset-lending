@@ -34,9 +34,21 @@ const userSchema = new Schema(
       enum: Object.values(ROLES),
       required: [true, 'Role is required'],
     },
+
+    // Notification "seen" timestamps for LIBRARIAN users.
+    // A request/alert is considered "new" if it was created/became active
+    // after this timestamp. Null means "never seen" (treat as epoch 0).
+    notifRequestsSeenAt: {
+      type: Date,
+      default: null,
+    },
+    notifAlertsSeenAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 

@@ -814,3 +814,130 @@ describe('M06 Loans — search, filter, pagination, bulk-return, history, alerts
     expect(res.status).toBe(403);
   });
 });
+
+// ---------------------------------------------------------------------------
+// M08 — "Due soonest" sort: null dueDate loans must always appear last
+// ---------------------------------------------------------------------------
+
+describe('M08 Loans — due soonest sort places null-dueDate loans at end', () => {
+  async function makeLibrarian(email = 'lib@example.com') {
+    return User.create({
+      name: 'Lib User',
+      email,
+      passwordHash: await hashPassword('password123'),
+      role: ROLES.LIBRARIAN,
+    });
+  }
+
+  async function makeMember(email = 'member@example.com') {
+    return User.create({
+      name: 'Member User',
+      email,
+      passwordHash: await hashPassword('password123'),
+      role: ROLES.MEMBER,
+    });
+  }
+
+  async function makeItem(code) {
+    return Item.create({ title: `Item ${code}`, category: 'Equipment', code });
+  }
+
+  async function loginAs(email) {
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password: 'password123' });
+    return res.body.token;
+  }
+
+  it('dueDate asc: loans with null dueDate appear after loans with a real dueDate', async () => {
+    await makeLibrarian();
+    const m = await makeMember();
+    const libToken = await loginAs('lib@example.com');
+
+    // Item with a real due date (7 days from now)
+    const item1 = await makeItem('DS-001');
+    const dueSoon = new Date();
+    dueSoon.setDate(dueSoon.getDate() + 7);
+    await request(app)
+      .post('/api/loans/issue')
+      .set('Authorization', `Bearer ${libToken}`)
+      .send({ itemId: item1._id, borrowerId: m._id, dueDate: dueSoon.toISOString() });
+
+    // Create a RETURNED loan with no dueDate directly in DB
+    // (simulates a loan that was returned without ever having a dueDate)
+    const item2 = await makeItem('DS-002');
+    await Loan.create({
+      item: item2._id,
+      borrower: m._id,
+      createdBy: m._id,
+      status: LOAN_STATUSES.RETURNED,
+      requestedAt: new Date(),
+      dueDate: null,
+      alertDismissed: false,
+    });
+
+    const res = await request(app)
+      .get('/api/loans?sort=dueDate&order=asc')
+      .set('Authorization', `Bearer ${libToken}`);
+
+    expect(res.status).toBe(200);
+    const loans = res.body.data;
+    expect(loans.length).toBe(2);
+
+    // The loan with a real dueDate must come first
+    expect(loans[0].dueDate).not.toBeNull();
+    // The loan with no dueDate must come last
+    expect(loans[loans.length - 1].dueDate).toBeNull();
+  });
+
+  it('dueDate asc: multiple dated loans ordered earliest first, then null-dueDate loans', async () => {
+    await makeLibrarian();
+    const m = await makeMember();
+    const libToken = await loginAs('lib@example.com');
+
+    const item1 = await makeItem('DS-003');
+    const item2 = await makeItem('DS-004');
+    const item3 = await makeItem('DS-005');
+
+    // Due in 20 days
+    const later = new Date();
+    later.setDate(later.getDate() + 20);
+    await request(app)
+      .post('/api/loans/issue')
+      .set('Authorization', `Bearer ${libToken}`)
+      .send({ itemId: item1._id, borrowerId: m._id, dueDate: later.toISOString() });
+
+    // Due in 5 days
+    const sooner = new Date();
+    sooner.setDate(sooner.getDate() + 5);
+    await request(app)
+      .post('/api/loans/issue')
+      .set('Authorization', `Bearer ${libToken}`)
+      .send({ itemId: item2._id, borrowerId: m._id, dueDate: sooner.toISOString() });
+
+    // Loan with no dueDate — created directly in DB
+    await Loan.create({
+      item: item3._id,
+      borrower: m._id,
+      createdBy: m._id,
+      status: LOAN_STATUSES.REQUESTED,
+      requestedAt: new Date(),
+      dueDate: null,
+      alertDismissed: false,
+    });
+
+    const res = await request(app)
+      .get('/api/loans?sort=dueDate&order=asc')
+      .set('Authorization', `Bearer ${libToken}`);
+
+    expect(res.status).toBe(200);
+    const loans = res.body.data;
+    expect(loans.length).toBe(3);
+
+    // First two should have due dates, in ascending order
+    expect(new Date(loans[0].dueDate).getTime()).toBeLessThan(new Date(loans[1].dueDate).getTime());
+    // Last should have no due date
+    expect(loans[2].dueDate).toBeNull();
+  });
+});
+

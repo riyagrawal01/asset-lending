@@ -36,7 +36,7 @@ beforeEach(async () => {
 const VALID_USER = {
   name: 'Alice Member',
   email: 'alice@example.com',
-  password: 'password123',
+  password: 'Password123!',
 };
 
 async function registerAndLogin(userData = VALID_USER) {
@@ -83,7 +83,7 @@ describe('POST /api/auth/register', () => {
   it('rejects missing name with 400', async () => {
     const res = await request(app)
       .post('/api/auth/register')
-      .send({ email: 'a@a.com', password: 'password123' });
+      .send({ email: 'a@a.com', password: 'Password123!' });
     expect(res.status).toBe(400);
   });
 
@@ -128,7 +128,7 @@ describe('POST /api/auth/login', () => {
   it('returns 401 on unknown email with same generic message', async () => {
     const res = await request(app)
       .post('/api/auth/login')
-      .send({ email: 'nobody@example.com', password: 'password123' });
+      .send({ email: 'nobody@example.com', password: 'Password123!' });
     expect(res.status).toBe(401);
     expect(res.body.error.message).toMatch(/invalid email or password/i);
   });

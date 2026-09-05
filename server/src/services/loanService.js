@@ -293,15 +293,83 @@ async function searchLoans({
   const sortDir = order === 'asc' ? 1 : -1;
 
   // Step 4 — count + fetch in parallel.
-  const [total, docs] = await Promise.all([
-    Loan.countDocuments(filter),
-    Loan.find(filter)
+  //
+  // Special case: when sorting by dueDate, a plain Mongoose .sort({ dueDate: 1 })
+  // puts null/missing dueDate documents FIRST (MongoDB null < any date).
+  // The requirement is that loans with no dueDate must always appear AFTER loans
+  // that have one, regardless of sort direction.
+  //
+  // To achieve this we switch to an aggregation pipeline that adds a sentinel
+  // field (_dueSortKey) equal to the max possible Date for null-dueDate loans,
+  // ensuring they always sort to the end.
+  const MAX_DATE = new Date(8640000000000000); // JS max date
+
+  let fetchPromise;
+  if (sortField === 'dueDate') {
+    fetchPromise = Loan.aggregate([
+      { $match: filter },
+      {
+        $addFields: {
+          _dueSortKey: {
+            $cond: {
+              if: { $ifNull: ['$dueDate', false] },
+              then: '$dueDate',
+              else: MAX_DATE,
+            },
+          },
+        },
+      },
+      { $sort: { _dueSortKey: sortDir, _id: 1 } },
+      { $skip: skip },
+      { $limit: limitNum },
+      // Populate item and borrower via $lookup
+      {
+        $lookup: {
+          from: 'items',
+          localField: 'item',
+          foreignField: '_id',
+          as: '_itemDoc',
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'borrower',
+          foreignField: '_id',
+          as: '_borrowerDoc',
+        },
+      },
+      {
+        $addFields: {
+          item: {
+            $let: {
+              vars: { i: { $arrayElemAt: ['$_itemDoc', 0] } },
+              in: { _id: '$$i._id', title: '$$i.title', code: '$$i.code', category: '$$i.category' },
+            },
+          },
+          borrower: {
+            $let: {
+              vars: { u: { $arrayElemAt: ['$_borrowerDoc', 0] } },
+              in: { _id: '$$u._id', name: '$$u.name', email: '$$u.email' },
+            },
+          },
+        },
+      },
+      { $project: { _itemDoc: 0, _borrowerDoc: 0, _dueSortKey: 0 } },
+    ]);
+  } else {
+    fetchPromise = Loan.find(filter)
       .sort({ [sortField]: sortDir })
       .skip(skip)
       .limit(limitNum)
       .populate('item', 'title code category')
       .populate('borrower', 'name email')
-      .lean(),
+      .lean();
+  }
+
+  const [total, docs] = await Promise.all([
+    Loan.countDocuments(filter),
+    fetchPromise,
   ]);
 
   const data = docs.map((doc) => ({

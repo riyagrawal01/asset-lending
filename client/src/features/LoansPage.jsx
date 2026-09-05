@@ -182,7 +182,18 @@ export default function LoansPage({ user, filter }) {
     setBulkResult(null);
     try {
       const res = await bulkReturn([...selected]);
-      setBulkResult(res.results);
+      
+      // Enhance results with item info so they are readable in the UI
+      const enrichedResults = res.results.map(r => {
+        const loan = result.data.find(l => l.id === r.loanId);
+        return {
+          ...r,
+          itemTitle: loan?.item?.title || 'Unknown Item',
+          itemCode: loan?.item?.code || 'Unknown Code'
+        };
+      });
+
+      setBulkResult(enrichedResults);
       runQuery();
     } catch (err) {
       setError(err.message);
@@ -323,14 +334,25 @@ export default function LoansPage({ user, filter }) {
 
       {/* Bulk return result summary */}
       {bulkResult && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 'var(--radius)', padding: '0.75rem 1rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
-          <strong>Bulk return complete:</strong>{' '}
-          {bulkResult.filter(r => r.success).length} succeeded,{' '}
-          {bulkResult.filter(r => !r.success).length} failed.
-          {bulkResult.filter(r => !r.success).map(r => (
-            <div key={r.loanId} style={{ color: 'var(--color-danger)' }}>Loan {r.loanId}: {r.reason}</div>
-          ))}
-          <button className="btn btn-secondary" style={{ marginTop: '0.4rem' }} onClick={() => setBulkResult(null)}>Dismiss</button>
+        <div style={{ background: '#f8fafc', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1rem', marginBottom: '1rem', fontSize: '0.875rem' }}>
+          <strong style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1rem' }}>Bulk return complete</strong>
+          <div style={{ marginBottom: '0.5rem' }}>
+            <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>{bulkResult.filter(r => r.success).length} succeeded</span>,{' '}
+            <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>{bulkResult.filter(r => !r.success).length} failed</span>.
+          </div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {bulkResult.map(r => (
+              <li key={r.loanId} style={{ padding: '0.3rem 0', borderBottom: '1px solid var(--color-border-light)' }}>
+                <strong>{r.itemTitle}</strong> <span style={{ color: 'var(--color-text-muted)' }}>({r.itemCode})</span> —{' '}
+                {r.success ? (
+                  <span style={{ color: 'var(--color-success)', fontWeight: 'bold' }}>Success</span>
+                ) : (
+                  <span style={{ color: 'var(--color-danger)', fontWeight: 'bold' }}>Failed: {r.reason}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          <button className="btn btn-secondary" style={{ marginTop: '0.75rem' }} onClick={() => setBulkResult(null)}>Dismiss</button>
         </div>
       )}
 

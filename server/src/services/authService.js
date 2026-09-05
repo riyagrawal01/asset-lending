@@ -63,6 +63,18 @@ async function register({ name, email, password }) {
     err.code = 'VALIDATION_ERROR';
     throw err;
   }
+  
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+
+  if (!hasLower || !hasUpper || !hasNumber || !hasSpecial) {
+    const err = new Error('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.');
+    err.status = 400;
+    err.code = 'WEAK_PASSWORD';
+    throw err;
+  }
 
   const existing = await User.findOne({ email: email.toLowerCase().trim() });
   if (existing) {

@@ -7,6 +7,7 @@ export default function AdminUsersPage() {
   const [error, setError] = useState(null);
   const [actionMessage, setActionMessage] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [confirmRoleChange, setConfirmRoleChange] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -24,10 +25,18 @@ export default function AdminUsersPage() {
     }
   }
 
-  async function handleRoleChange(user, newRole) {
+  function initiateRoleChange(user, newRole) {
     if (user.role === newRole) return;
+    setConfirmRoleChange({ user, newRole });
+  }
+
+  async function handleRoleChange() {
+    if (!confirmRoleChange) return;
+    const { user, newRole } = confirmRoleChange;
+    setConfirmRoleChange(null);
     setActionError(null);
     setActionMessage(null);
+    
     try {
       const res = await updateUserRole(user.id, newRole);
       setUsers(users.map(u => u.id === user.id ? { ...u, role: newRole } : u));
@@ -81,7 +90,7 @@ export default function AdminUsersPage() {
                   ) : (
                     <select
                       value={u.role}
-                      onChange={e => handleRoleChange(u, e.target.value)}
+                      onChange={e => initiateRoleChange(u, e.target.value)}
                       style={{ padding: '0.35rem 0.5rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', fontSize: '0.875rem' }}
                     >
                       <option value="MEMBER">Member</option>
@@ -93,6 +102,26 @@ export default function AdminUsersPage() {
             ))}
           </tbody>
         </table>
+      )}
+
+      {confirmRoleChange && (
+        <div className="modal-overlay" onClick={() => setConfirmRoleChange(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Confirm Role Change</h2>
+            <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem', color: 'var(--color-text)' }}>
+              Are you sure you want to change the role of <strong>{confirmRoleChange.user.name}</strong> from <strong>{confirmRoleChange.user.role}</strong> to <strong>{confirmRoleChange.newRole}</strong>?
+            </p>
+            {confirmRoleChange.newRole === 'MEMBER' && confirmRoleChange.user.role === 'LIBRARIAN' && (
+              <p style={{ color: 'var(--color-danger)', fontSize: '0.85rem', marginTop: '0.5rem', background: '#fee2e2', padding: '0.5rem', borderRadius: 'var(--radius)' }}>
+                <strong>Warning:</strong> Changing a Librarian to a Member will remove them from all item custodianships.
+              </p>
+            )}
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setConfirmRoleChange(null)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleRoleChange}>Confirm</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

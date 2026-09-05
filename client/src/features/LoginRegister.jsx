@@ -94,6 +94,11 @@ export default function LoginRegister({ onAuth }) {
             required
             autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
           />
+          {mode === 'register' && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '0.35rem' }}>
+              Minimum 8 characters. Must contain at least one uppercase letter, one lowercase letter, one number, and one special character.
+            </div>
+          )}
         </div>
 
         <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>

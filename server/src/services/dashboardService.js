@@ -10,6 +10,7 @@
 const { Loan, LOAN_STATUSES } = require('../models/Loan');
 const { Item } = require('../models/Item');
 const { ItemCustodian } = require('../models/ItemCustodian');
+const { User } = require('../models/User');
 
 async function getDashboard() {
   const now = new Date();
@@ -196,7 +197,79 @@ async function getDashboard() {
     summary: { ...summary, totalItems },
     weeklyReturns,
     byCustodian: custodianRows,
+    // ADMIN-only: user counts from DB. The controller strips this for LIBRARIAN.
+    userCounts: {
+      members: await User.countDocuments({ role: 'MEMBER' }),
+      librarians: await User.countDocuments({ role: 'LIBRARIAN' }),
+    },
   };
 }
 
-module.exports = { getDashboard };
+// ---------------------------------------------------------------------------
+// Member dashboard — personal borrowing stats for MEMBER users only.
+// Returns only data scoped to the requesting user's own loans.
+// ---------------------------------------------------------------------------
+
+async function getMemberDashboard(userId) {
+  const now = new Date();
+
+  const [summaryResult] = await Loan.aggregate([
+    { $match: { borrower: userId } },
+    {
+      $facet: {
+        activeLoans: [
+          { $match: { status: LOAN_STATUSES.ISSUED } },
+          { $count: 'n' },
+        ],
+        requestedLoans: [
+          { $match: { status: LOAN_STATUSES.REQUESTED } },
+          { $count: 'n' },
+        ],
+        returnedLoans: [
+          { $match: { status: LOAN_STATUSES.RETURNED } },
+          { $count: 'n' },
+        ],
+        overdueLoans: [
+          {
+            $match: {
+              status: LOAN_STATUSES.ISSUED,
+              dueDate: { $lt: now },
+            },
+          },
+          { $count: 'n' },
+        ],
+        totalLoans: [{ $count: 'n' }],
+      },
+    },
+  ]);
+
+  const counts = {
+    active: summaryResult.activeLoans[0]?.n ?? 0,
+    requested: summaryResult.requestedLoans[0]?.n ?? 0,
+    returned: summaryResult.returnedLoans[0]?.n ?? 0,
+    overdue: summaryResult.overdueLoans[0]?.n ?? 0,
+    total: summaryResult.totalLoans[0]?.n ?? 0,
+  };
+
+  // Current active (ISSUED) loans with item details — so member can see what
+  // they have out and when it is due.
+  const currentLoans = await Loan.find({
+    borrower: userId,
+    status: { $in: [LOAN_STATUSES.ISSUED, LOAN_STATUSES.REQUESTED] },
+  })
+    .populate('item', 'title code category')
+    .sort({ dueDate: 1 })
+    .lean();
+
+  const activeList = currentLoans.map((l) => ({
+    id: l._id,
+    item: l.item,
+    status: l.status,
+    requestedAt: l.requestedAt,
+    dueDate: l.dueDate,
+  }));
+
+  return { counts, activeList };
+}
+
+module.exports = { getDashboard, getMemberDashboard };
