@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, updateUserRole } from '../api/adminApi';
+import { PageStatCard, PageStatsRow } from './PageStats';
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState([]);
@@ -52,11 +53,22 @@ export default function AdminUsersPage() {
     }
   }
 
+  const members = users.filter(u => u.role === 'MEMBER').length;
+  const librarians = users.filter(u => u.role === 'LIBRARIAN').length;
+  const admins = users.filter(u => u.role === 'ADMIN').length;
+
   return (
     <div className="catalogue-page">
       <div className="catalogue-header">
-        <h1>Manage Users</h1>
+        <h1>Users</h1>
       </div>
+
+      <PageStatsRow>
+        <PageStatCard label="Total users" value={users.length} />
+        <PageStatCard label="Members" value={members} />
+        <PageStatCard label="Librarians" value={librarians} />
+        <PageStatCard label="Admins" value={admins} />
+      </PageStatsRow>
 
       {error && <div className="error-banner">{error}</div>}
       {actionError && <div className="error-banner">{actionError}</div>}

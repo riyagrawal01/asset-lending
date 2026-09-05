@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { getAlerts, dismissAlert } from '../api/loansApi';
 
+import { PageStatCard, PageStatsRow } from './PageStats';
+
 export default function AlertsPage({ user }) {
   const isLibrarian = user.role === 'LIBRARIAN';
   const [alerts, setAlerts]   = useState([]);
@@ -40,12 +42,19 @@ export default function AlertsPage({ user }) {
     return Math.floor(diff / 86400000);
   }
 
+  const unseenAlerts = alerts.filter(a => !a.seen).length;
+
   return (
     <div className="catalogue-page">
       <div className="catalogue-header">
         <h1>Overdue Alerts</h1>
         <button className="btn btn-secondary" onClick={fetchAlerts}>Refresh</button>
       </div>
+
+      <PageStatsRow>
+        <PageStatCard label="Total alerts" value={alerts.length} />
+        <PageStatCard label="Unseen" value={unseenAlerts} highlight={unseenAlerts > 0} />
+      </PageStatsRow>
 
       {error && <div className="error-banner">{error}</div>}
 

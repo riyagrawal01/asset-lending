@@ -71,7 +71,6 @@ export default function LoansPage({ user, filter }) {
     try {
       const data = await getLoans(params);
       setResult(data);
-      setSelected(new Set()); // clear selection on reload
     } catch (err) {
       setError(err.message);
     } finally {
@@ -167,11 +166,19 @@ export default function LoansPage({ user, filter }) {
   }
 
   function toggleSelectAll() {
-    const issuedIds = result.data.filter(l => l.status === 'ISSUED').map(l => l.id);
+    const issuedIds = displayedLoans.filter(l => l.status === 'ISSUED').map(l => l.id);
     if (issuedIds.every(id => selected.has(id)) && issuedIds.length > 0) {
-      setSelected(new Set());
+      setSelected(prev => {
+        const next = new Set(prev);
+        issuedIds.forEach(id => next.delete(id));
+        return next;
+      });
     } else {
-      setSelected(new Set(issuedIds));
+      setSelected(prev => {
+        const next = new Set(prev);
+        issuedIds.forEach(id => next.add(id));
+        return next;
+      });
     }
   }
 
@@ -194,6 +201,7 @@ export default function LoansPage({ user, filter }) {
       });
 
       setBulkResult(enrichedResults);
+      setSelected(new Set());
       runQuery();
     } catch (err) {
       setError(err.message);
@@ -243,9 +251,13 @@ export default function LoansPage({ user, filter }) {
 
   // Client-side pagination for members
   const isClientPaginated = !canViewAll;
-  const displayedLoans = isClientPaginated
+  const rawDisplayedLoans = isClientPaginated
     ? filteredLoans.slice((page - 1) * LIMIT, page * LIMIT)
     : filteredLoans;
+    
+  const selectedDisplayed = rawDisplayedLoans.filter(l => selected.has(l.id));
+  const unselectedDisplayed = rawDisplayedLoans.filter(l => !selected.has(l.id));
+  const displayedLoans = [...selectedDisplayed, ...unselectedDisplayed];
 
   const totalItems = isClientPaginated ? filteredLoans.length : (result.pagination?.total || 0);
   const totalPages = isClientPaginated ? Math.ceil(filteredLoans.length / LIMIT) : (result.pagination?.totalPages || 1);

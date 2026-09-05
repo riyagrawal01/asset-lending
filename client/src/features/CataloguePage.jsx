@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { listItems, listAllItems, archiveItem, restoreItem, importCSV, exportOnLoan } from '../api/itemsApi';
 import { requestLoan } from '../api/loansApi';
+import { getDashboard } from '../api/dashboardApi';
 import ItemFormModal from './ItemFormModal';
+import { PageStatCard, PageStatsRow } from './PageStats';
 
 /**
  * CataloguePage - main catalogue view.
@@ -20,6 +22,7 @@ export default function CataloguePage({ user }) {
   const [error, setError] = useState(null);
   const [modal, setModal] = useState(null); // null | { mode: 'create' } | { mode: 'edit', item }
   const [actionError, setActionError] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
 
   // Catalogue search — client-side filter over the fetched item list
   const [catalogueSearch, setCatalogueSearch] = useState('');
@@ -51,6 +54,12 @@ export default function CataloguePage({ user }) {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  useEffect(() => {
+    if (canViewArchived) {
+      getDashboard().then(data => setDashboardStats(data.catalogueStatus)).catch(() => {});
+    }
+  }, [canViewArchived]);
 
   async function handleArchive(item) {
     setActionError(null);
@@ -139,18 +148,31 @@ export default function CataloguePage({ user }) {
               disabled={importing}
               title="Import items from CSV (title, category, code)"
             >
-              {importing ? 'Importing…' : '↑ Import CSV'}
+              {importing ? 'Importing…' : '📄 Import CSV'}
             </button>
             <button
               className="btn btn-secondary"
               onClick={handleExport}
               title="Download currently issued loans as CSV"
             >
-              ↓ Export on-loan
+              ⬇️ Export on-loan
             </button>
           </div>
         )}
       </div>
+
+      <PageStatsRow>
+        <PageStatCard label="Total items" value={items.length} />
+        {dashboardStats && (
+          <>
+            <PageStatCard label="Available" value={dashboardStats.available || 0} />
+            <PageStatCard label="Currently out" value={dashboardStats.issued || 0} />
+            <PageStatCard label="Requested" value={dashboardStats.requested || 0} />
+            <PageStatCard label="Lost" value={dashboardStats.lost || 0} highlight={dashboardStats.lost > 0} />
+            <PageStatCard label="Archived" value={dashboardStats.archived || 0} />
+          </>
+        )}
+      </PageStatsRow>
 
       <div className="catalogue-toolbar" style={{ gap: '1rem', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '0.5rem', flex: 1, minWidth: '240px' }}>
@@ -217,6 +239,7 @@ export default function CataloguePage({ user }) {
                 <th>Title</th>
                 <th>Category</th>
                 {canViewArchived && <th>Status</th>}
+                <th>Availability</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -236,14 +259,21 @@ export default function CataloguePage({ user }) {
                       </td>
                     )}
                     <td>
+                      <span className={`badge ${item.available ? 'badge-active' : (item.requestedByMe ? 'badge-requested' : 'badge-archived')}`}>
+                        {item.available ? 'Available' : (item.requestedByMe ? 'Requested' : 'Unavailable')}
+                      </span>
+                    </td>
+                    <td>
                       <div className="actions">
                         {user.role === 'MEMBER' && (
                           <button 
                             className="btn btn-primary"
+                            disabled={!item.available}
                             onClick={async () => {
                               try {
+                                setActionError(null);
                                 await requestLoan(item.id);
-                                alert('Loan requested successfully.');
+                                setItems(prev => prev.map(i => i.id === item.id ? { ...i, available: false, requestedByMe: true } : i));
                               } catch (err) {
                                 setActionError(err.message);
                               }

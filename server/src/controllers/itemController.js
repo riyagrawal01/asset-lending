@@ -6,7 +6,7 @@ const itemService = require('../services/itemService');
 
 async function listItems(req, res, next) {
   try {
-    const items = await itemService.listItems({ includeArchived: false });
+    const items = await itemService.listItems({ includeArchived: false, userId: req.user._id });
     res.json({ items });
   } catch (err) {
     next(err);
@@ -15,7 +15,7 @@ async function listItems(req, res, next) {
 
 async function listArchivedItems(req, res, next) {
   try {
-    const items = await itemService.listItems({ includeArchived: true });
+    const items = await itemService.listItems({ includeArchived: true, userId: req.user._id });
     res.json({ items });
   } catch (err) {
     next(err);

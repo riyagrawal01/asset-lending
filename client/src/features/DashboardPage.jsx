@@ -11,7 +11,7 @@ function StatCard({ label, value, highlight }) {
       background: 'var(--color-surface)',
       border: `1px solid ${highlight ? 'var(--color-danger)' : 'var(--color-border)'}`,
       borderRadius: 'var(--radius)',
-      padding: '1.5rem',
+      padding: '1.25rem',
       boxShadow: 'var(--shadow-sm)',
       flex: '1 1 180px',
       display: 'flex',
@@ -19,10 +19,10 @@ function StatCard({ label, value, highlight }) {
       alignItems: 'flex-start',
       borderLeft: highlight ? '4px solid var(--color-danger)' : '1px solid var(--color-border)'
     }}>
-      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
         {label}
       </div>
-      <div style={{ fontSize: '2.5rem', fontWeight: 700, color: highlight ? 'var(--color-danger)' : 'var(--color-text)', lineHeight: '1' }}>
+      <div style={{ fontSize: '2rem', fontWeight: 700, color: highlight ? 'var(--color-danger)' : 'var(--color-text)', lineHeight: '1' }}>
         {value}
       </div>
     </div>
@@ -70,13 +70,13 @@ function CatalogueStatusChart({ statusData }) {
       background: 'var(--color-surface)',
       border: '1px solid var(--color-border)',
       borderRadius: 'var(--radius)',
-      padding: '1.5rem',
+      padding: '1.25rem',
       boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
       height: '100%',
     }}>
-      <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Catalogue Breakdown</h2>
+      <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>Catalogue Breakdown</h2>
       
       <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flex: 1 }}>
         <div style={{
@@ -139,7 +139,7 @@ function MemberDashboard({ user, data }) {
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius)',
-        padding: '1.5rem',
+        padding: '1.25rem',
         marginBottom: '1.5rem',
         boxShadow: 'var(--shadow-sm)',
         display: 'flex',
@@ -171,12 +171,12 @@ function MemberDashboard({ user, data }) {
       </div>
 
       {/* Current loans / requests */}
-      <section>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+      <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)' }}>
+        <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>
           {activeList.length > 0 ? 'Currently active' : 'No active loans or requests'}
         </h2>
         {activeList.length > 0 && (
-          <table className="item-table">
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead>
               <tr>
                 <th>Item</th>
@@ -207,7 +207,7 @@ function MemberDashboard({ user, data }) {
             </tbody>
           </table>
         )}
-      </section>
+      </div>
     </div>
   );
 }
@@ -236,9 +236,9 @@ function LibrarianDashboard({ data }) {
         <CatalogueStatusChart statusData={data.catalogueStatus} />
 
         {/* Loans by status */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Loans by status</h2>
-          <table className="item-table" style={{ margin: 0 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>Loans by status</h2>
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead><tr><th>Status</th><th>Count</th></tr></thead>
             <tbody>
               {summary.loansByStatus.length === 0 ? (
@@ -260,9 +260,9 @@ function LibrarianDashboard({ data }) {
         </div>
 
         {/* Weekly returns (last 8 weeks) */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Returns per week (last 8 weeks)</h2>
-          <table className="item-table" style={{ margin: 0 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>Returns per week (last 8 weeks)</h2>
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead><tr><th>Week of</th><th>Returned</th></tr></thead>
             <tbody>
               {weeklyReturns.length === 0 ? (
@@ -279,12 +279,12 @@ function LibrarianDashboard({ data }) {
       </div>
 
       {/* Custodian breakdown */}
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>By librarian</h2>
+      <div style={{ marginTop: '1.5rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)' }}>
+        <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>By librarian</h2>
         {byCustodian.length === 0 ? (
-          <div className="empty-state">No librarians found.</div>
+          <div className="empty-state" style={{ margin: 0 }}>No librarians found.</div>
         ) : (
-          <table className="item-table">
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead>
               <tr>
                 <th>Librarian</th>
@@ -312,7 +312,7 @@ function LibrarianDashboard({ data }) {
             </tbody>
           </table>
         )}
-      </section>
+      </div>
     </div>
   );
 }
@@ -344,9 +344,9 @@ function AdminDashboard({ data }) {
         <CatalogueStatusChart statusData={data.catalogueStatus} />
 
         {/* Loans by status */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Loans by status</h2>
-          <table className="item-table" style={{ margin: 0 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>Loans by status</h2>
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead><tr><th>Status</th><th>Count</th></tr></thead>
             <tbody>
               {summary.loansByStatus.length === 0 ? (
@@ -368,9 +368,9 @@ function AdminDashboard({ data }) {
         </div>
 
         {/* Weekly returns */}
-        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Returns per week (last 8 weeks)</h2>
-          <table className="item-table" style={{ margin: 0 }}>
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>Returns per week (last 8 weeks)</h2>
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead><tr><th>Week of</th><th>Returned</th></tr></thead>
             <tbody>
               {weeklyReturns.length === 0 ? (
@@ -387,12 +387,12 @@ function AdminDashboard({ data }) {
       </div>
 
       {/* Custodian breakdown */}
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>By librarian</h2>
+      <div style={{ marginTop: '1.5rem', background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.25rem', boxShadow: 'var(--shadow-sm)' }}>
+        <h2 style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '1.25rem', textTransform: 'uppercase', letterSpacing: '0.02em', color: 'var(--color-text-muted)' }}>By librarian</h2>
         {byCustodian.length === 0 ? (
-          <div className="empty-state">No librarians found.</div>
+          <div className="empty-state" style={{ margin: 0 }}>No librarians found.</div>
         ) : (
-          <table className="item-table">
+          <table className="item-table" style={{ margin: 0, border: 'none', boxShadow: 'none' }}>
             <thead>
               <tr>
                 <th>Librarian</th>
@@ -420,7 +420,7 @@ function AdminDashboard({ data }) {
             </tbody>
           </table>
         )}
-      </section>
+      </div>
     </div>
   );
 }

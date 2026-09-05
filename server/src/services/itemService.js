@@ -44,10 +44,42 @@ function appError(message, status, code) {
 
 // Service functions
 
-async function listItems({ includeArchived = false } = {}) {
+async function listItems({ includeArchived = false, userId = null } = {}) {
   const filter = includeArchived ? {} : { archived: false };
-  const items = await Item.find(filter).sort({ title: 1 });
-  return items.map(toDTO);
+  
+  const items = await Item.aggregate([
+    { $match: filter },
+    { $sort: { title: 1 } },
+    {
+      $lookup: {
+        from: 'loans',
+        let: { itemId: '$_id' },
+        pipeline: [
+          { 
+            $match: { 
+              $expr: { $eq: ['$item', '$$itemId'] },
+              status: { $in: ['ISSUED', 'REQUESTED'] }
+            } 
+          }
+        ],
+        as: 'activeLoans'
+      }
+    }
+  ]);
+
+  return items.map(doc => {
+    const dto = toDTO(doc);
+    const activeLoan = doc.activeLoans && doc.activeLoans.length > 0 ? doc.activeLoans[0] : null;
+    dto.available = !activeLoan;
+    
+    // We intentionally do not expose borrowerId to prevent leaking other members' request data
+    if (activeLoan) {
+      if (userId && activeLoan.borrower.toString() === userId.toString() && activeLoan.status === 'REQUESTED') {
+        dto.requestedByMe = true;
+      }
+    }
+    return dto;
+  });
 }
 
 

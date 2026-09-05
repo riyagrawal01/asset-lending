@@ -282,17 +282,21 @@ async function searchLoans({
     ];
   }
 
-  // Step 2 — explicit field filters (override search when both provided).
-  if (status) filter.status = status;
-  if (itemId) filter.item = itemId;
-  if (borrowerId) filter.borrower = borrowerId;
-
-  // Step 3 — sort direction.
+  // Step 3 - sort direction.
   const SORTABLE = new Set(['requestedAt', 'dueDate', 'status', 'createdAt', 'updatedAt']);
   const sortField = SORTABLE.has(sort) ? sort : 'requestedAt';
   const sortDir = order === 'asc' ? 1 : -1;
 
-  // Step 4 — count + fetch in parallel.
+  // Step 2 - explicit field filters (override search when both provided).
+  if (sortField === 'dueDate') {
+    filter.status = LOAN_STATUSES.ISSUED;
+  } else if (status) {
+    filter.status = status;
+  }
+  if (itemId) filter.item = itemId;
+  if (borrowerId) filter.borrower = borrowerId;
+
+  // Step 4 - count + fetch in parallel.
   //
   // Special case: when sorting by dueDate, a plain Mongoose .sort({ dueDate: 1 })
   // puts null/missing dueDate documents FIRST (MongoDB null < any date).
@@ -300,9 +304,11 @@ async function searchLoans({
   // that have one, regardless of sort direction.
   //
   // To achieve this we switch to an aggregation pipeline that adds a sentinel
-  // field (_dueSortKey) equal to the max possible Date for null-dueDate loans,
+  // field (_dueSortKey) equal to the max/min possible Date for null-dueDate loans,
   // ensuring they always sort to the end.
   const MAX_DATE = new Date(8640000000000000); // JS max date
+  const MIN_DATE = new Date(-8640000000000000); // JS min date
+  const nullDateSentinel = sortDir === 1 ? MAX_DATE : MIN_DATE;
 
   let fetchPromise;
   if (sortField === 'dueDate') {
@@ -314,7 +320,7 @@ async function searchLoans({
             $cond: {
               if: { $ifNull: ['$dueDate', false] },
               then: '$dueDate',
-              else: MAX_DATE,
+              else: nullDateSentinel,
             },
           },
         },
