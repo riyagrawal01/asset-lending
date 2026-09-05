@@ -9,17 +9,112 @@ function StatCard({ label, value, highlight }) {
   return (
     <div style={{
       background: 'var(--color-surface)',
-      border: `1px solid ${highlight ? '#fca5a5' : 'var(--color-border)'}`,
+      border: `1px solid ${highlight ? 'var(--color-danger)' : 'var(--color-border)'}`,
       borderRadius: 'var(--radius)',
-      padding: '1.25rem 1.5rem',
+      padding: '1.5rem',
       boxShadow: 'var(--shadow-sm)',
-      flex: '1 1 160px',
+      flex: '1 1 180px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      borderLeft: highlight ? '4px solid var(--color-danger)' : '1px solid var(--color-border)'
     }}>
-      <div style={{ fontSize: '2rem', fontWeight: 700, color: highlight ? 'var(--color-danger)' : 'var(--color-primary)' }}>
+      <div style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem' }}>
+        {label}
+      </div>
+      <div style={{ fontSize: '2.5rem', fontWeight: 700, color: highlight ? 'var(--color-danger)' : 'var(--color-text)', lineHeight: '1' }}>
         {value}
       </div>
-      <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.25rem' }}>
-        {label}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Shared donut chart for catalogue status
+// ---------------------------------------------------------------------------
+
+function CatalogueStatusChart({ statusData }) {
+  const { available, issued, requested, lost, archived } = statusData || {};
+  const total = (available || 0) + (issued || 0) + (requested || 0) + (lost || 0) + (archived || 0);
+
+  const colors = {
+    available: '#059669', // var(--color-success)
+    issued:    '#0f766e', // var(--color-primary)
+    requested: '#d97706', // var(--color-warning)
+    lost:      '#e11d48', // var(--color-danger)
+    archived:  '#9ca3af'  // neutral gray
+  };
+
+  if (total === 0) {
+    return <div className="empty-state">No catalogue items.</div>;
+  }
+
+  let start = 0;
+  const segments = [
+    { label: 'Available', value: available || 0, color: colors.available },
+    { label: 'Out / Issued', value: issued || 0, color: colors.issued },
+    { label: 'Requested', value: requested || 0, color: colors.requested },
+    { label: 'Lost', value: lost || 0, color: colors.lost },
+    { label: 'Archived', value: archived || 0, color: colors.archived },
+  ].filter(s => s.value > 0);
+
+  const gradientStops = segments.map(seg => {
+    const end = start + (seg.value / total) * 100;
+    const stop = `${seg.color} ${start}% ${end}%`;
+    start = end;
+    return stop;
+  }).join(', ');
+
+  return (
+    <div style={{
+      background: 'var(--color-surface)',
+      border: '1px solid var(--color-border)',
+      borderRadius: 'var(--radius)',
+      padding: '1.5rem',
+      boxShadow: 'var(--shadow-sm)',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+    }}>
+      <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Catalogue Breakdown</h2>
+      
+      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', flex: 1 }}>
+        <div style={{
+          width: '140px',
+          height: '140px',
+          borderRadius: '50%',
+          background: `conic-gradient(${gradientStops})`,
+          position: 'relative',
+          flexShrink: 0,
+        }}>
+          <div style={{
+            position: 'absolute',
+            inset: '25px',
+            background: 'var(--color-surface)',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexDirection: 'column',
+          }}>
+            <span style={{ fontSize: '1.25rem', fontWeight: 700, lineHeight: 1 }}>{total}</span>
+            <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Total</span>
+          </div>
+        </div>
+
+        <div style={{ minWidth: '150px' }}>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+            {segments.map(seg => (
+              <li key={seg.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: seg.color, flexShrink: 0 }}></span>
+                  <span style={{ color: 'var(--color-text)' }}>{seg.label}</span>
+                </div>
+                <strong style={{ marginLeft: '1rem' }}>{seg.value}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </div>
   );
@@ -44,7 +139,7 @@ function MemberDashboard({ user, data }) {
         background: 'var(--color-surface)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius)',
-        padding: '1.25rem 1.5rem',
+        padding: '1.5rem',
         marginBottom: '1.5rem',
         boxShadow: 'var(--shadow-sm)',
         display: 'flex',
@@ -53,8 +148,8 @@ function MemberDashboard({ user, data }) {
         alignItems: 'center',
       }}>
         <div>
-          <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{user.name}</div>
-          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>{user.email}</div>
+          <div style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--color-text)' }}>{user.name}</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginTop: '0.25rem' }}>{user.email}</div>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <span className="role-badge" style={{ alignSelf: 'center' }}>{user.role}</span>
@@ -136,29 +231,38 @@ function LibrarianDashboard({ data }) {
         <StatCard label="Catalogue items"     value={summary.totalItems} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        {/* Catalogue Status Donut Chart */}
+        <CatalogueStatusChart statusData={data.catalogueStatus} />
+
         {/* Loans by status */}
-        <section>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>Loans by status</h2>
-          <table className="item-table">
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Loans by status</h2>
+          <table className="item-table" style={{ margin: 0 }}>
             <thead><tr><th>Status</th><th>Count</th></tr></thead>
             <tbody>
               {summary.loansByStatus.length === 0 ? (
                 <tr><td colSpan={2} style={{ color: 'var(--color-text-muted)' }}>No loans yet.</td></tr>
-              ) : summary.loansByStatus.map(row => (
-                <tr key={row.status}>
-                  <td>{row.status}</td>
-                  <td><strong>{row.count}</strong></td>
-                </tr>
-              ))}
+              ) : summary.loansByStatus.map(row => {
+                const badgeClass = row.status === 'ISSUED' ? 'badge-issued' 
+                                 : row.status === 'REQUESTED' ? 'badge-requested' 
+                                 : row.status === 'RETURNED' ? 'badge-returned' 
+                                 : 'badge-archived';
+                return (
+                  <tr key={row.status}>
+                    <td><span className={`badge ${badgeClass}`}>{row.status}</span></td>
+                    <td><strong>{row.count}</strong></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </section>
+        </div>
 
         {/* Weekly returns (last 8 weeks) */}
-        <section>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>Returns per week (last 8 weeks)</h2>
-          <table className="item-table">
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Returns per week (last 8 weeks)</h2>
+          <table className="item-table" style={{ margin: 0 }}>
             <thead><tr><th>Week of</th><th>Returned</th></tr></thead>
             <tbody>
               {weeklyReturns.length === 0 ? (
@@ -171,7 +275,7 @@ function LibrarianDashboard({ data }) {
               ))}
             </tbody>
           </table>
-        </section>
+        </div>
       </div>
 
       {/* Custodian breakdown */}
@@ -235,29 +339,38 @@ function AdminDashboard({ data }) {
         <StatCard label="Librarians"          value={userCounts?.librarians ?? '—'} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.5rem' }}>
+        {/* Catalogue Status Donut Chart */}
+        <CatalogueStatusChart statusData={data.catalogueStatus} />
+
         {/* Loans by status */}
-        <section>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>Loans by status</h2>
-          <table className="item-table">
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Loans by status</h2>
+          <table className="item-table" style={{ margin: 0 }}>
             <thead><tr><th>Status</th><th>Count</th></tr></thead>
             <tbody>
               {summary.loansByStatus.length === 0 ? (
                 <tr><td colSpan={2} style={{ color: 'var(--color-text-muted)' }}>No loans yet.</td></tr>
-              ) : summary.loansByStatus.map(row => (
-                <tr key={row.status}>
-                  <td>{row.status}</td>
-                  <td><strong>{row.count}</strong></td>
-                </tr>
-              ))}
+              ) : summary.loansByStatus.map(row => {
+                const badgeClass = row.status === 'ISSUED' ? 'badge-issued' 
+                                 : row.status === 'REQUESTED' ? 'badge-requested' 
+                                 : row.status === 'RETURNED' ? 'badge-returned' 
+                                 : 'badge-archived';
+                return (
+                  <tr key={row.status}>
+                    <td><span className={`badge ${badgeClass}`}>{row.status}</span></td>
+                    <td><strong>{row.count}</strong></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </section>
+        </div>
 
         {/* Weekly returns */}
-        <section>
-          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>Returns per week (last 8 weeks)</h2>
-          <table className="item-table">
+        <div style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius)', padding: '1.5rem', boxShadow: 'var(--shadow-sm)', display: 'flex', flexDirection: 'column' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1.5rem' }}>Returns per week (last 8 weeks)</h2>
+          <table className="item-table" style={{ margin: 0 }}>
             <thead><tr><th>Week of</th><th>Returned</th></tr></thead>
             <tbody>
               {weeklyReturns.length === 0 ? (
@@ -270,7 +383,7 @@ function AdminDashboard({ data }) {
               ))}
             </tbody>
           </table>
-        </section>
+        </div>
       </div>
 
       {/* Custodian breakdown */}

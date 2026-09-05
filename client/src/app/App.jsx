@@ -31,7 +31,12 @@ export default function App() {
   // -------------------------------------------------------------------------
 
   useEffect(() => {
-    getMe().then(setUser).catch(() => setUser(null));
+    getMe().then((loggedInUser) => {
+      setUser(loggedInUser);
+      if (loggedInUser) {
+        setCurrentView('dashboard');
+      }
+    }).catch(() => setUser(null));
   }, []);
 
   // -------------------------------------------------------------------------
@@ -106,7 +111,26 @@ export default function App() {
   }
 
   if (!user) {
-    return <LoginRegister onAuth={handleAuth} />;
+    return (
+      <div className="app-container">
+        <header className="app-header">
+          <div className="app-header-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+            Asset Lending
+          </div>
+        </header>
+        <main className="app-main">
+          <LoginRegister onAuth={handleAuth} />
+        </main>
+        <footer className="app-footer">
+          &copy; {new Date().getFullYear()} Asset Lending Inc. All rights reserved.
+        </footer>
+      </div>
+    );
   }
 
   const isLibrarian = user.role === 'LIBRARIAN';
@@ -121,9 +145,22 @@ export default function App() {
     const active = currentView === view;
     return (
       <button
-        className={`btn ${active ? 'btn-primary' : 'btn-secondary'}`}
         onClick={() => navigateTo(view)}
-        style={{ position: 'relative' }}
+        style={{
+          position: 'relative',
+          background: 'none',
+          border: 'none',
+          padding: '0.5rem 0.25rem',
+          margin: '0 0.5rem',
+          fontSize: '0.9rem',
+          fontWeight: 500,
+          color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
+          borderBottom: active ? '2px solid var(--color-primary)' : '2px solid transparent',
+          cursor: 'pointer',
+          transition: 'color 0.2s, border-bottom-color 0.2s'
+        }}
+        onMouseOver={(e) => { if (!active) e.currentTarget.style.color = 'var(--color-text)'; }}
+        onMouseOut={(e) => { if (!active) e.currentTarget.style.color = 'var(--color-text-muted)'; }}
       >
         {label}
         {dot && (
@@ -131,14 +168,14 @@ export default function App() {
             aria-label="new"
             style={{
               position: 'absolute',
-              top: '4px',
-              right: '4px',
+              top: '2px',
+              right: '-8px',
               width: '8px',
               height: '8px',
               borderRadius: '50%',
               background: 'var(--color-danger)',
               display: 'inline-block',
-              border: '1.5px solid var(--color-surface)',
+              boxShadow: '0 0 0 2px var(--color-surface)',
             }}
           />
         )}
@@ -147,52 +184,56 @@ export default function App() {
   }
 
   return (
-    <>
-      {/* Navigation bar */}
-      <div className="auth-bar">
-        {/* Dashboard — visible to all roles */}
-        <NavBtn view="dashboard" label="Dashboard" />
+    <div className="app-container">
+      {/* Header & Navigation */}
+      <header className="app-header">
+        <div className="app-header-brand">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          Asset Lending
+        </div>
+        
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <nav className="app-nav">
+            <NavBtn view="dashboard" label="Dashboard" />
+            <NavBtn view="catalogue" label="Catalogue" />
+            {isLibrarian && <NavBtn view="requests"  label="Requests" dot={notifCounts.newRequests > 0} />}
+            <NavBtn view="loans" label={canViewAll ? 'All Loans' : 'My Loans'} />
+            {canViewAll && <NavBtn view="alerts" label="Alerts" dot={isLibrarian && notifCounts.newAlerts > 0} />}
+            {isAdmin && <NavBtn view="admin_users" label="Users" />}
+            {isAdmin && <NavBtn view="admin_custodians" label="Custodians" />}
+          </nav>
 
-        <NavBtn view="catalogue" label="Catalogue" />
+          <div className="app-user-controls">
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: '1.2' }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>{user.name}</span>
+              <span className="role-badge">{user.role}</span>
+            </div>
+            <button className="btn btn-secondary" onClick={handleLogout} style={{ padding: '0.4rem 0.75rem', fontSize: '0.8125rem' }}>
+              Sign out
+            </button>
+          </div>
+        </div>
+      </header>
 
-        {/* Requests — librarian only, with notification dot */}
-        {isLibrarian && (
-          <NavBtn
-            view="requests"
-            label="Requests"
-            dot={notifCounts.newRequests > 0}
-          />
-        )}
+      {/* Main Content Area */}
+      <main className="app-main">
+        {currentView === 'dashboard'  && <DashboardPage user={user} />}
+        {currentView === 'catalogue'  && <CataloguePage user={user} />}
+        {currentView === 'loans'      && <LoansPage user={user} filter="all" />}
+        {currentView === 'requests'   && isLibrarian && <LoansPage user={user} filter="requests" />}
+        {currentView === 'alerts'     && canViewAll  && <AlertsPage user={user} />}
+        {currentView === 'admin_users'       && isAdmin && <AdminUsersPage />}
+        {currentView === 'admin_custodians'  && isAdmin && <AdminCustodiansPage />}
+      </main>
 
-        <NavBtn view="loans" label={canViewAll ? 'All Loans' : 'My Loans'} />
-
-        {/* Alerts — librarian and admin; dot only for librarian */}
-        {canViewAll && (
-          <NavBtn
-            view="alerts"
-            label="Alerts"
-            dot={isLibrarian && notifCounts.newAlerts > 0}
-          />
-        )}
-
-        {isAdmin && <NavBtn view="admin_users"      label="Users"      />}
-        {isAdmin && <NavBtn view="admin_custodians" label="Custodians" />}
-
-        <div style={{ flex: 1 }} />
-        <span className="user-info">{user.name}</span>
-        <span className="role-badge">{user.role}</span>
-        <button className="btn btn-secondary" onClick={handleLogout}>Sign out</button>
-      </div>
-
-      {/* Pages */}
-      {currentView === 'dashboard'  && <DashboardPage user={user} />}
-      {currentView === 'catalogue'  && <CataloguePage user={user} />}
-      {currentView === 'loans'      && <LoansPage user={user} filter="all" />}
-      {currentView === 'requests'   && isLibrarian && <LoansPage user={user} filter="requests" />}
-      {currentView === 'alerts'     && canViewAll  && <AlertsPage user={user} />}
-
-      {currentView === 'admin_users'       && isAdmin && <AdminUsersPage />}
-      {currentView === 'admin_custodians'  && isAdmin && <AdminCustodiansPage />}
-    </>
+      {/* Footer */}
+      <footer className="app-footer">
+        &copy; {new Date().getFullYear()} Asset Lending Inc. All rights reserved.
+      </footer>
+    </div>
   );
 }

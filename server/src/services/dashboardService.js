@@ -193,10 +193,75 @@ async function getDashboard() {
     { $sort: { 'custodian.name': 1 } },
   ]);
 
+  // -------------------------------------------------------------------------
+  // Catalogue Status Breakdown for Pie Chart
+  // -------------------------------------------------------------------------
+  const catalogueStatusResult = await Item.aggregate([
+    {
+      $facet: {
+        archived: [
+          { $match: { archived: true } },
+          { $count: 'n' }
+        ],
+        notArchived: [
+          { $match: { archived: false } },
+          {
+            $lookup: {
+              from: 'loans',
+              let: { itemId: '$_id' },
+              pipeline: [
+                { $match: { $expr: { $eq: ['$item', '$$itemId'] } } },
+                { $sort: { createdAt: -1 } },
+                { $limit: 1 }
+              ],
+              as: 'latestLoan'
+            }
+          },
+          {
+            $project: {
+              status: {
+                $cond: {
+                  if: { $eq: [{ $size: '$latestLoan' }, 0] },
+                  then: 'AVAILABLE',
+                  else: { $arrayElemAt: ['$latestLoan.status', 0] }
+                }
+              }
+            }
+          },
+          {
+            $group: {
+              _id: {
+                $cond: {
+                  if: { $eq: ['$status', 'RETURNED'] },
+                  then: 'AVAILABLE',
+                  else: '$status'
+                }
+              },
+              count: { $sum: 1 }
+            }
+          }
+        ]
+      }
+    }
+  ]);
+
+  const rawArchived = catalogueStatusResult[0].archived[0]?.n || 0;
+  const rawNotArchived = catalogueStatusResult[0].notArchived || [];
+
+  // Normalize into exactly 5 categories: Available, Issued, Requested, Lost, Archived
+  const catalogueStatus = {
+    available: rawNotArchived.find(s => s._id === 'AVAILABLE')?.count || 0,
+    issued: rawNotArchived.find(s => s._id === 'ISSUED')?.count || 0,
+    requested: rawNotArchived.find(s => s._id === 'REQUESTED')?.count || 0,
+    lost: rawNotArchived.find(s => s._id === 'LOST')?.count || 0,
+    archived: rawArchived
+  };
+
   return {
     summary: { ...summary, totalItems },
     weeklyReturns,
     byCustodian: custodianRows,
+    catalogueStatus,
     // ADMIN-only: user counts from DB. The controller strips this for LIBRARIAN.
     userCounts: {
       members: await User.countDocuments({ role: 'MEMBER' }),
